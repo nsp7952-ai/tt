@@ -1,13 +1,119 @@
 {% extends "base.html" %}
 {% block title %}Filters - Job Autopilot{% endblock %}
 {% block content %}
-<div class="px-4 py-8">
+<div class="px-4 py-8" x-data="filterApp()">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Filters</h1>
     <div class="bg-white shadow rounded-lg p-6">
         <h2 class="text-xl font-semibold mb-4">Global Filter</h2>
         <p class="text-gray-600 mb-4">Configure your global job filtering rules here.</p>
-        <textarea class="w-full h-64 p-4 border rounded-lg font-mono text-sm" placeholder='{"positions": ["golang", "backend"], "remote_only": true, "min_grade": "middle"}'></textarea>
-        <button class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">Save Filter</button>
+        
+        <div class="mb-4">
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" x-model="filter.enabled" class="form-checkbox h-5 w-5 text-blue-600">
+                <span class="text-gray-700">Filter Enabled</span>
+            </label>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Min Grade</label>
+                <select x-model="filter.grade_min" class="w-full border rounded-md px-3 py-2">
+                    <option value="junior">Junior</option>
+                    <option value="middle">Middle</option>
+                    <option value="senior">Senior</option>
+                    <option value="lead">Lead</option>
+                </select>
+            </div>
+            <div>
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" x-model="filter.remote_only" class="form-checkbox h-5 w-5 text-blue-600">
+                    <span class="text-gray-700">Remote Only</span>
+                </label>
+            </div>
+            <div>
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" x-model="filter.allow_full_stack" class="form-checkbox h-5 w-5 text-blue-600">
+                    <span class="text-gray-700">Allow Full Stack</span>
+                </label>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Stack Backend Focus Min</label>
+                <input type="number" x-model="filter.full_stack_backend_focus_min" step="0.1" min="0" max="1" class="w-full border rounded-md px-3 py-2">
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Include Keywords</label>
+            <textarea x-model="includeKeywords" class="w-full h-20 p-2 border rounded-md text-sm" placeholder="python, backend, api"></textarea>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Exclude Keywords</label>
+            <textarea x-model="excludeKeywords" class="w-full h-20 p-2 border rounded-md text-sm" placeholder="sales, manager, intern"></textarea>
+        </div>
+        
+        <button @click="saveFilter()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+            Save Filter
+        </button>
+        <span x-show="saved" class="ml-4 text-green-600">Saved!</span>
     </div>
 </div>
+
+<script>
+function filterApp() {
+    return {
+        filter: {
+            enabled: true,
+            grade_min: 'middle',
+            remote_only: true,
+            allow_full_stack: true,
+            full_stack_backend_focus_min: 0.6
+        },
+        includeKeywords: '',
+        excludeKeywords: '',
+        saved: false,
+        
+        init() {
+            fetch('/api/filters/global')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.filter_json) {
+                        this.filter = {
+                            enabled: data.enabled,
+                            grade_min: data.filter_json.grade?.[0] || 'middle',
+                            remote_only: data.filter_json.remote_only ?? true,
+                            allow_full_stack: data.filter_json.allow_full_stack ?? true,
+                            full_stack_backend_focus_min: data.filter_json.full_stack_backend_focus_min ?? 0.6
+                        };
+                        this.includeKeywords = (data.filter_json.include_keywords || []).join(', ');
+                        this.excludeKeywords = (data.filter_json.exclude_keywords || []).join(', ');
+                    }
+                });
+        },
+        
+        saveFilter() {
+            const payload = {
+                enabled: this.filter.enabled,
+                filter_json: {
+                    grade: [this.filter.grade_min],
+                    remote_only: this.filter.remote_only,
+                    allow_full_stack: this.filter.allow_full_stack,
+                    full_stack_backend_focus_min: parseFloat(this.filter.full_stack_backend_focus_min),
+                    include_keywords: this.includeKeywords.split(',').map(s => s.trim()).filter(Boolean),
+                    exclude_keywords: this.excludeKeywords.split(',').map(s => s.trim()).filter(Boolean)
+                }
+            };
+            
+            fetch('/api/filters/global', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            }).then(() => {
+                this.saved = true;
+                setTimeout(() => this.saved = false, 2000);
+            });
+        }
+    }
+}
+</script>
 {% endblock %}
