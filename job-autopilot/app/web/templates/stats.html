@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Statistics - Job Autopilot{% endblock %}
+{% block content %}
+<div class="px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Statistics</h1>
+    <div class="bg-white shadow rounded-lg p-6">
+        <p class="text-gray-600">Statistics will be displayed here once data is collected.</p>
+        <div class="mt-6 grid grid-cols-2 gap-4">
+            <div class="border rounded p-4">
+                <h3 class="font-semibold">By Source</h3>
+                <p class="text-sm text-gray-500 mt-2">Breakdown by hh.ru, Hirify, Telegram</p>
+            </div>
+            <div class="border rounded p-4">
+                <h3 class="font-semibold">By Status</h3>
+                <p class="text-sm text-gray-500 mt-2">Vacancy and application status distribution</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

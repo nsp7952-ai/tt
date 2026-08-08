@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Vacancies - Job Autopilot{% endblock %}
+{% block content %}
+<div class="px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Vacancies</h1>
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for vacancy in vacancies %}
+                <tr>
+                    <td class="px-6 py-4 text-sm text-gray-900">{{ vacancy.title }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ vacancy.company or 'N/A' }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ vacancy.source }}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{{ vacancy.status }}</span></td>
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ vacancy.created_at.strftime('%Y-%m-%d') if vacancy.created_at else 'N/A' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No vacancies yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
