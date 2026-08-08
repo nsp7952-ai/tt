@@ -81,7 +81,7 @@ function profileApp() {
         saved: false,
         
         init() {
-            fetch('/api/profile')
+            fetch('/api/profile/')
                 .then(r => r.json())
                 .then(data => {
                     if (data) {
@@ -91,7 +91,7 @@ function profileApp() {
         },
         
         saveProfile() {
-            fetch('/api/profile', {
+            fetch('/api/profile/', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(this.profile)

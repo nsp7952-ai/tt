@@ -1,40 +1,358 @@
 {% extends "base.html" %}
 {% block title %}Settings - Job Autopilot{% endblock %}
 {% block content %}
-<div class="px-4 py-8">
+<div class="px-4 py-8" x-data="settingsApp()">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Settings</h1>
-    <div class="bg-white shadow rounded-lg p-6 space-y-6">
-        <div>
-            <h2 class="text-xl font-semibold mb-4">LLM Configuration</h2>
+    
+    <!-- Success/Error Messages -->
+    <div x-show="message" 
+         :class="messageType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+         class="mb-6 px-4 py-3 border rounded-lg flex items-center justify-between"
+         x-transition>
+        <span x-text="message"></span>
+        <button @click="message = ''" class="text-xl">&times;</button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- LLM Configuration -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                LLM Configuration
+            </h2>
             <div class="space-y-4">
-                <input type="text" placeholder="API Key" class="w-full p-2 border rounded-md">
-                <input type="text" placeholder="Base URL" class="w-full p-2 border rounded-md" value="https://api.openai.com/v1">
-                <input type="text" placeholder="Model" class="w-full p-2 border rounded-md" value="gpt-4o">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                    <input type="password" x-model="settings.llm_api_key" placeholder="sk-..." class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Your OpenAI or compatible API key. Get it at <a href="https://platform.openai.com/api-keys" target="_blank" class="text-blue-500 hover:underline">platform.openai.com</a></p>
+                    <div x-show="settings.llm_api_key_set" class="text-xs text-green-600 mt-1">✓ API key is configured</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+                    <input type="text" x-model="settings.llm_base_url" placeholder="https://api.openai.com/v1" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">For OpenAI use: https://api.openai.com/v1. For local models change accordingly.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                    <input type="text" x-model="settings.llm_model" placeholder="gpt-4o" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Recommended: gpt-4o, gpt-4-turbo, or claude-3-opus</p>
+                </div>
             </div>
         </div>
-        <div>
-            <h2 class="text-xl font-semibold mb-4">Telegram Configuration</h2>
+
+        <!-- Telegram Configuration -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.88-2.11 5.88-2.53 2.8-1.18 3.38-1.39 3.76-1.39.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .24z"/>
+                </svg>
+                Telegram Configuration
+            </h2>
             <div class="space-y-4">
-                <input type="text" placeholder="API ID" class="w-full p-2 border rounded-md">
-                <input type="text" placeholder="API Hash" class="w-full p-2 border rounded-md">
-                <input type="text" placeholder="Bot Token" class="w-full p-2 border rounded-md">
-                <input type="text" placeholder="Chat ID" class="w-full p-2 border rounded-md">
+                <div class="bg-blue-50 p-3 rounded-md mb-4">
+                    <p class="text-xs text-blue-800 font-semibold mb-2">How to get Telegram credentials:</p>
+                    <ol class="text-xs text-blue-700 list-decimal list-inside space-y-1">
+                        <li>Go to <a href="https://my.telegram.org/apps" target="_blank" class="text-blue-600 hover:underline font-medium">my.telegram.org/apps</a></li>
+                        <li>Login with your phone number</li>
+                        <li>Click "Create application"</li>
+                        <li>Copy <strong>API ID</strong> and <strong>API Hash</strong></li>
+                        <li>For Bot Token: Create bot via <a href="https://t.me/botfather" target="_blank" class="text-blue-600 hover:underline">@BotFather</a></li>
+                        <li>For Chat ID: Send message to <a href="https://t.me/getmyid_bot" target="_blank" class="text-blue-600 hover:underline">@getmyid_bot</a></li>
+                    </ol>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">API ID</label>
+                    <input type="text" x-model="settings.telegram_api_id" placeholder="12345678" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <div x-show="settings.telegram_api_id_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">API Hash</label>
+                    <input type="password" x-model="settings.telegram_api_hash" placeholder="abc123def456..." class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <div x-show="settings.telegram_api_hash_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Reader Session (optional)</label>
+                    <input type="password" x-model="settings.telegram_reader_session" placeholder="Session string for reading channels" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Session string for user account to read private channels</p>
+                    <div x-show="settings.telegram_reader_session_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Outreach Session (optional)</label>
+                    <input type="password" x-model="settings.telegram_outreach_session" placeholder="Session string for sending messages" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Session string for user account to send outreach messages</p>
+                    <div x-show="settings.telegram_outreach_session_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Bot Token</label>
+                    <input type="password" x-model="settings.telegram_bot_token" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Bot token for sending alerts (create via @BotFather)</p>
+                    <div x-show="settings.telegram_bot_token_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alerts Chat ID</label>
+                    <input type="text" x-model="settings.telegram_alerts_chat_id" placeholder="-1001234567890" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Chat/channel ID where bot sends alerts (use negative for groups/channels)</p>
+                    <div x-show="settings.telegram_alerts_chat_id_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
+                </div>
             </div>
         </div>
-        <div>
-            <h2 class="text-xl font-semibold mb-4">Scheduler</h2>
+
+        <!-- Scheduler Settings -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Scheduler Settings
+            </h2>
             <div class="space-y-4">
-                <label class="flex items-center space-x-2">
-                    <input type="number" class="w-24 p-2 border rounded-md" value="30">
-                    <span>Vacancy fetch interval (minutes)</span>
-                </label>
-                <label class="flex items-center space-x-2">
-                    <input type="number" class="w-24 p-2 border rounded-md" value="5">
-                    <span>Telegram monitor interval (minutes)</span>
-                </label>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Vacancy Fetch Interval (minutes)</label>
+                    <input type="number" x-model.number="settings.vacancy_fetch_interval_minutes" min="1" max="1440" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">How often to check sources for new vacancies</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Telegram Monitor Interval (minutes)</label>
+                    <input type="number" x-model.number="settings.telegram_monitor_interval_minutes" min="1" max="60" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">How often to check Telegram channels</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Summary Interval (hours)</label>
+                    <input type="number" x-model.number="settings.summary_interval_hours" min="1" max="24" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">How often to send summary reports</p>
+                </div>
             </div>
         </div>
-        <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">Save Settings</button>
+
+        <!-- Browser Agent Settings -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+                Browser Agent Provider
+            </h2>
+            <div class="space-y-4">
+                <select x-model="settings.browser_agent_provider" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="manual">Manual - Manual data entry</option>
+                    <option value="clipboard">Clipboard - Read from clipboard</option>
+                    <option value="browser_bridge">Browser Bridge - Browser extension</option>
+                    <option value="api">API - External API integration</option>
+                </select>
+                <p class="text-xs text-gray-500">Select how the agent interacts with job sites</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Telegram Channels Management -->
+    <div class="mt-6 bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.88-2.11 5.88-2.53 2.8-1.18 3.38-1.39 3.76-1.39.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .24z"/>
+            </svg>
+            Telegram Channels
+        </h2>
+        
+        <!-- Add Channel Form -->
+        <div class="flex gap-2 mb-4">
+            <input type="text" x-model="newChannel.username" placeholder="@channel_username or channel_id" class="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <input type="text" x-model="newChannel.name" placeholder="Channel name (optional)" class="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <button @click="addChannel()" :disabled="!newChannel.username.trim()" class="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded transition">
+                Add Channel
+            </button>
+        </div>
+
+        <!-- Channels List -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Channel</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="channel in settings.telegram_channels" :key="channel.id">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="channel.username_or_id"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="channel.name || '-'"></td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span :class="channel.enabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" x-text="channel.enabled ? 'Enabled' : 'Disabled'"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button @click="toggleChannel(channel.id)" class="text-blue-600 hover:text-blue-900 mr-3" x-text="channel.enabled ? 'Disable' : 'Enable'"></button>
+                                <button @click="deleteChannel(channel.id)" class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="settings.telegram_channels.length === 0">
+                        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No channels configured yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="mt-6 flex justify-end">
+        <button @click="saveSettings()" :disabled="saving" class="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg shadow transition flex items-center">
+            <svg x-show="saving" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span x-text="saving ? 'Saving...' : 'Save Settings'"></span>
+        </button>
     </div>
 </div>
+
+<script>
+function settingsApp() {
+    return {
+        saving: false,
+        message: '',
+        messageType: 'success',
+        newChannel: { username: '', name: '' },
+        settings: {
+            llm_api_key: '',
+            llm_api_key_set: false,
+            llm_base_url: 'https://api.openai.com/v1',
+            llm_model: 'gpt-4o',
+            telegram_api_id: '',
+            telegram_api_id_set: false,
+            telegram_api_hash: '',
+            telegram_api_hash_set: false,
+            telegram_reader_session: '',
+            telegram_reader_session_set: false,
+            telegram_outreach_session: '',
+            telegram_outreach_session_set: false,
+            telegram_bot_token: '',
+            telegram_bot_token_set: false,
+            telegram_alerts_chat_id: '',
+            telegram_alerts_chat_id_set: false,
+            vacancy_fetch_interval_minutes: 30,
+            telegram_monitor_interval_minutes: 5,
+            summary_interval_hours: 4,
+            browser_agent_provider: 'manual',
+            telegram_channels: []
+        },
+        
+        async loadSettings() {
+            try {
+                const response = await fetch('/settings/api/data');
+                if (response.ok) {
+                    const data = await response.json();
+                    this.settings = { ...this.settings, ...data };
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                this.showMessage('Error loading settings', 'error');
+            }
+        },
+        
+        async saveSettings() {
+            this.saving = true;
+            try {
+                const response = await fetch('/settings/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.settings)
+                });
+                
+                if (response.ok) {
+                    this.showMessage('Settings saved successfully!', 'success');
+                    this.loadSettings(); // Reload to update _set flags
+                } else {
+                    const error = await response.json();
+                    this.showMessage('Error saving settings: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                this.showMessage('Error saving settings: ' + error.message, 'error');
+            } finally {
+                this.saving = false;
+            }
+        },
+        
+        async addChannel() {
+            if (!this.newChannel.username.trim()) return;
+            
+            try {
+                const params = new URLSearchParams({
+                    username_or_id: this.newChannel.username,
+                    name: this.newChannel.name
+                });
+                
+                const response = await fetch('/settings/api/channels/add?' + params, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    this.showMessage('Channel added successfully!', 'success');
+                    this.newChannel = { username: '', name: '' };
+                    this.loadSettings();
+                } else {
+                    const error = await response.json();
+                    this.showMessage('Error adding channel: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error adding channel:', error);
+                this.showMessage('Error adding channel: ' + error.message, 'error');
+            }
+        },
+        
+        async toggleChannel(channelId) {
+            try {
+                const response = await fetch(`/settings/api/channels/${channelId}/toggle`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    this.loadSettings();
+                } else {
+                    const error = await response.json();
+                    this.showMessage('Error toggling channel: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling channel:', error);
+                this.showMessage('Error toggling channel: ' + error.message, 'error');
+            }
+        },
+        
+        async deleteChannel(channelId) {
+            if (!confirm('Are you sure you want to delete this channel?')) return;
+            
+            try {
+                const response = await fetch(`/settings/api/channels/${channelId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    this.showMessage('Channel deleted successfully!', 'success');
+                    this.loadSettings();
+                } else {
+                    const error = await response.json();
+                    this.showMessage('Error deleting channel: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting channel:', error);
+                this.showMessage('Error deleting channel: ' + error.message, 'error');
+            }
+        },
+        
+        showMessage(text, type) {
+            this.message = text;
+            this.messageType = type;
+            setTimeout(() => { this.message = ''; }, 5000);
+        },
+        
+        init() {
+            this.loadSettings();
+        }
+    }
+}
+</script>
 {% endblock %}
