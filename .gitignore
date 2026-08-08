@@ -1,42 +1,63 @@
 ```
-# Database
+# Database files
 *.sqlite
+*.db
 
-# Environment variables
+# Environment
 .env
 .env.local
 *.env.*
 
-# IDE
-.vscode/
-.idea/
-
 # Logs
 *.log
 
-# Temporary files
-*.tmp
-*.swp
-
-# Python
+# Dependencies
+node_modules/
+.venv/
+venv/
 __pycache__/
+.mypy_cache/
+.pytest_cache/
+pip-log.txt
+pipenv.lock
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+coverage/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+.directory
+*.nfs*
+*.swp
+*.swo
+*~
+
+# Python specific
 *.pyc
 *.pyo
 *.pyd
 .Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
+*.so
+*.egg
+
+# Testing
+.pytest_cache/
+.nosetests
 coverage.xml
 *.cover
-*.log
-.DS_Store
-Thumbs.db
+.hypothesis/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 ```
