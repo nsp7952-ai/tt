@@ -162,3 +162,24 @@ class EventLog(SQLModel, table=True):
     message: str
     data: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class RunbookPrompt(SQLModel, table=True):
+    __tablename__ = "runbook_prompts"
+    
+    id: str = Field(primary_key=True)
+    source: str
+    task_type: str
+    name: str
+    template_text: str
+    enabled: bool = True
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Setting(SQLModel, table=True):
+    __tablename__ = "settings"
+    
+    key: str = Field(primary_key=True)
+    value: str
+    is_secret: bool = False
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
