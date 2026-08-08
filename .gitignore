@@ -8,40 +8,38 @@ __pycache__/
 env/
 venv/
 .venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
+.ENV
+.ENV.*
+.python-version
+.pytest_cache/
+.mypy_cache/
 .coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
+coverage/
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.sass-cache/
+.well-known/
+
+# Logs
 *.log
-.DS_Store
-Thumbs.db
 
 # Environment variables
 .env
 .env.local
 .env.*
 
-# Build and distribution artifacts
-dist/
-build/
-*.egg-info/
-
-# IDE
+# Editors
 .vscode/
 .idea/
 *.swp
 *.swo
 *.tmp
 
-# Testing
-.pytest_cache/
-.mypy_cache/
-.coverage
-htmlcov/
-coverage/
+# OS
+.DS_Store
+Thumbs.db
 ```

@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.database import create_db_and_tables, engine
 from app.models import SQLModel
+from app.templates import templates
 from app.web.routes import (
     dashboard,
     sources,
@@ -55,8 +55,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Templates
-templates = Jinja2Templates(directory="app/web/templates")
+# Templates are now in app.templates module
+# templates = Jinja2Templates(directory="app/web/templates")
 
 # Include routers
 app.include_router(dashboard.router, prefix="", tags=["dashboard"])
