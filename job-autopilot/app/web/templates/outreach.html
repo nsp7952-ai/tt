@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Outreach - Job Autopilot{% endblock %}
+{% block content %}
+<div class="px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Outreach Messages</h1>
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Channel</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subject</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sent At</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for msg in messages %}
+                <tr>
+                    <td class="px-6 py-4 text-sm text-gray-900">{{ msg.contact_id }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ msg.channel }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ msg.subject or 'N/A' }}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">{{ msg.status }}</span></td>
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ msg.sent_at.strftime('%Y-%m-%d %H:%M') if msg.sent_at else 'Not sent' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No outreach messages yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

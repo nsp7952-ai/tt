@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Runbooks - Job Autopilot{% endblock %}
+{% block content %}
+<div class="px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Runbooks & Prompts</h1>
+    <div class="bg-white shadow rounded-lg p-6">
+        <p class="text-gray-600">Manage your LLM runbook prompts for different tasks.</p>
+        <div class="mt-6 space-y-4">
+            <div class="border rounded p-4">
+                <h3 class="font-semibold">HH Search & Apply</h3>
+                <p class="text-sm text-gray-500">Prompt for browser agent to search and apply on hh.ru</p>
+            </div>
+            <div class="border rounded p-4">
+                <h3 class="font-semibold">Hirify Contacts</h3>
+                <p class="text-sm text-gray-500">Prompt for extracting HR contacts from Hirify</p>
+            </div>
+            <div class="border rounded p-4">
+                <h3 class="font-semibold">Generate Application</h3>
+                <p class="text-sm text-gray-500">LLM prompt for generating cover letters</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
