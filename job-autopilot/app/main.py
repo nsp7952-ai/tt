@@ -21,6 +21,10 @@ from app.web.routes import (
     settings as settings_route,
     logs,
 )
+from app.web.routes.api import profile as api_profile
+from app.web.routes.api import filters as api_filters
+from app.web.routes.api import stats as api_stats
+from app.web.routes.api import sources as api_sources
 
 import os
 
@@ -58,7 +62,7 @@ app.add_middleware(
 # Templates are now in app.templates module
 # templates = Jinja2Templates(directory="app/web/templates")
 
-# Include routers
+# Include routers - Web UI routes
 app.include_router(dashboard.router, prefix="", tags=["dashboard"])
 app.include_router(sources.router, prefix="/sources", tags=["sources"])
 app.include_router(filters.router, prefix="/filters", tags=["filters"])
@@ -71,6 +75,12 @@ app.include_router(outreach.router, prefix="/outreach", tags=["outreach"])
 app.include_router(stats.router, prefix="/stats", tags=["stats"])
 app.include_router(settings_route.router, prefix="/settings", tags=["settings"])
 app.include_router(logs.router, prefix="/logs", tags=["logs"])
+
+# API routes
+app.include_router(api_profile.router, prefix="/api/profile", tags=["api-profile"])
+app.include_router(api_filters.router, prefix="/api/filters", tags=["api-filters"])
+app.include_router(api_stats.router, prefix="/api/stats", tags=["api-stats"])
+app.include_router(api_sources.router, prefix="/api/sources", tags=["api-sources"])
 
 
 @app.get("/")

@@ -1,42 +1,55 @@
 ```
-# Database
-job-autopilot/data/db.sqlite
-
-# Compiled and build artifacts
-*.pyc
+# Python
 __pycache__/
-*.o
-*.obj
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV
+.ENV.local
+.env
+.env.local
+.env.*
+
+# Build and distribution artifacts
 dist/
 build/
-target/
+*.egg-info/
+.eggs/
+.sass-cache/
+.well-known/
 
-# Dependencies
-.venv/
-venv/
-node_modules/
-.mypy_cache/
-.pytest_cache/
+# Testing
 .coverage
 coverage/
 htmlcov/
+.nyc_output/
+.pytest_cache/
+.hypothesis/
 
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-*.swo
-
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editors
+# IDE and editor files
 .vscode/
 .idea/
-
-# System files
+*.swp
+*.swo
+*~
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Icon?
+iTunes_Control/
 Thumbs.db
 ```
