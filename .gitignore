@@ -1,45 +1,34 @@
 ```
-# Python
+# Database
+job-autopilot/data/db.sqlite
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+
+# Compiled Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
-env/
-venv/
-.venv/
-.ENV
-.ENV.*
-.python-version
-.pytest_cache/
-.mypy_cache/
-.coverage
-coverage/
-htmlcov/
 
-# Build artifacts
-build/
-dist/
-*.egg-info/
-.sass-cache/
-.well-known/
-
-# Logs
+# Logs and temp files
 *.log
+*.tmp
+*.swp
 
-# Environment variables
+# Environment
 .env
 .env.local
-.env.*
+*.env.*
 
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
-# OS
-.DS_Store
-Thumbs.db
+# Build artifacts
+dist/
+build/
+target/
 ```

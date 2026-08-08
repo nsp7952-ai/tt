@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Column
 from typing import Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy import JSON
@@ -11,8 +11,8 @@ class Source(SQLModel, table=True):
     name: str
     enabled: bool = True
     use_global_filter: bool = True
-    local_filter_json: Optional[Dict[str, Any]] = Field(default=None, sa_type=JSON)
-    config_json: Optional[Dict[str, Any]] = Field(default=None, sa_type=JSON)
+    local_filter_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    config_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -39,7 +39,7 @@ class GlobalFilter(SQLModel, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     enabled: bool = True
-    filter_json: Optional[Dict[str, Any]] = Field(default=None, sa_type=JSON)
+    filter_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -57,7 +57,7 @@ class Vacancy(SQLModel, table=True):
     grade_hint: Optional[str] = None
     salary_text: Optional[str] = None
     description_text: Optional[str] = None
-    raw_json: Optional[Dict[str, Any]] = Field(default=None, sa_type=JSON)
+    raw_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     status: str = "new"
     match_score: Optional[int] = None
     match_reason: Optional[str] = None
@@ -74,7 +74,7 @@ class Application(SQLModel, table=True):
     source: str
     status: str = "pending"
     cover_letter: Optional[str] = None
-    generated_answers_json: Optional[Dict[str, Any]] = Field(default=None, sa_type=JSON)
+    generated_answers_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     agent_task_id: Optional[str] = None
     external_status: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -145,8 +145,8 @@ class AgentTask(SQLModel, table=True):
     prompt_text: str
     provider: str
     status: str = "created"
-    input_json: Optional[Dict[str, Any]] = Field(default=None, sa_type=JSON)
-    result_json: Optional[Dict[str, Any]] = Field(default=None, sa_type=JSON)
+    input_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    result_json: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     error: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -160,5 +160,5 @@ class EventLog(SQLModel, table=True):
     entity_type: Optional[str] = None
     entity_id: Optional[str] = None
     message: str
-    data: Optional[Dict[str, Any]] = Field(default=None, sa_type=JSON)
+    data: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=datetime.utcnow)
