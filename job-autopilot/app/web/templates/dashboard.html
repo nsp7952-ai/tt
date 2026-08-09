@@ -5,7 +5,7 @@
 {% block content %}
 <div class="px-4 py-8" x-data="dashboardApp()">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
-    
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
@@ -85,7 +85,7 @@
             <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Quick Actions</h3>
             <div class="flex space-x-4">
                 <button @click="fetchVacancies()" :disabled="loading" class="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded">
-                    <span x-show="!loading">Fetch Vacancies Now</span>
+                    <span x-show="!loading">Fetch All Vacancies</span>
                     <span x-show="loading">Loading...</span>
                 </button>
                 <button @click="runTelegramMonitor()" :disabled="loading" class="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded">
@@ -139,12 +139,13 @@ function dashboardApp() {
         },
         recentEvents: [],
         loading: false,
-        
+        notification: null,
+
         init() {
             this.loadStats();
             this.loadRecentEvents();
         },
-        
+
         loadStats() {
             fetch('/api/stats/summary')
                 .then(r => r.json())
@@ -152,51 +153,121 @@ function dashboardApp() {
                     if (data) {
                         this.stats = data;
                     }
+                })
+                .catch(err => {
+                    console.error('Error loading stats:', err);
+                    this.showNotification('error', 'Failed to load statistics');
                 });
         },
-        
+
         loadRecentEvents() {
             fetch('/api/events?limit=10')
                 .then(r => r.json())
                 .then(data => {
                     this.recentEvents = data || [];
+                })
+                .catch(err => {
+                    console.error('Error loading events:', err);
                 });
         },
-        
+
         formatDate(dateStr) {
             if (!dateStr) return '';
             const d = new Date(dateStr);
             return d.toLocaleString();
         },
-        
+
+        showNotification(type, message) {
+            this.notification = { type, message };
+            setTimeout(() => {
+                this.notification = null;
+            }, 5000);
+        },
+
         fetchVacancies() {
             this.loading = true;
-            fetch('/api/sources/fetch', {method: 'POST'})
-                .then(() => {
-                    this.loadStats();
-                    this.loadRecentEvents();
+            this.showNotification('info', 'Fetching vacancies...');
+            
+            fetch('/api/sources/fetch-all', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.showNotification('success', 'Vacancies fetched successfully!');
+                        this.loadStats();
+                        this.loadRecentEvents();
+                    } else {
+                        this.showNotification('error', data.message || 'Failed to fetch vacancies');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching vacancies:', err);
+                    this.showNotification('error', 'Error fetching vacancies: ' + err.message);
                 })
                 .finally(() => {
                     this.loading = false;
                 });
         },
-        
+
         runTelegramMonitor() {
             this.loading = true;
-            fetch('/api/telegram/monitor', {method: 'POST'})
-                .then(() => {
-                    this.loadStats();
-                    this.loadRecentEvents();
+            this.showNotification('info', 'Running Telegram monitor...');
+            
+            fetch('/api/sources/fetch?source_id=telegram_channels', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.showNotification('success', 'Telegram monitor completed!');
+                        this.loadStats();
+                        this.loadRecentEvents();
+                    } else {
+                        this.showNotification('error', data.message || 'Failed to run Telegram monitor');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error running Telegram monitor:', err);
+                    this.showNotification('error', 'Error: ' + err.message);
                 })
                 .finally(() => {
                     this.loading = false;
                 });
         },
-        
+
         generateSummary() {
-            alert('Summary generation will be available soon.');
+            this.loading = true;
+            fetch('/api/stats/generate-summary', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.showNotification('success', 'Summary generated!');
+                    } else {
+                        this.showNotification('info', 'Summary generation will be available soon.');
+                    }
+                })
+                .catch(err => {
+                    this.showNotification('info', 'Summary generation will be available soon.');
+                })
+                .finally(() => {
+                    this.loading = false;
+                });
         }
     }
 }
 </script>
+
+<!-- Notification Toast -->
+<div x-show="notification" 
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 transform translate-y-2"
+     x-transition:enter-end="opacity-100 transform translate-y-0"
+     x-transition:leave="transition ease-in duration-300"
+     x-transition:leave-start="opacity-100 transform translate-y-0"
+     x-transition:leave-end="opacity-0 transform translate-y-2"
+     class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50"
+     :class="{
+         'bg-green-500 text-white': notification?.type === 'success',
+         'bg-red-500 text-white': notification?.type === 'error',
+         'bg-blue-500 text-white': notification?.type === 'info'
+     }"
+     x-text="notification?.message">
+</div>
 {% endblock %}

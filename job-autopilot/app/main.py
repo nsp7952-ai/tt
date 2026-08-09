@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from sqlmodel import Session, select
 
 from app.config import settings
-from app.database import create_db_and_tables, engine
+from app.database import create_db_and_tables, engine, get_session
 from app.models import SQLModel
 from app.templates import templates
 from app.web.routes import (
@@ -81,6 +82,29 @@ app.include_router(api_profile.router, prefix="/api/profile", tags=["api-profile
 app.include_router(api_filters.router, prefix="/api/filters", tags=["api-filters"])
 app.include_router(api_stats.router, prefix="/api/stats", tags=["api-stats"])
 app.include_router(api_sources.router, prefix="/api/sources", tags=["api-sources"])
+
+
+@app.get("/api/events")
+async def get_events(limit: int = 10, session: Session = Depends(get_session)):
+    """Get recent event logs"""
+    from app.models import EventLog
+    events = session.exec(
+        select(EventLog)
+        .order_by(EventLog.created_at.desc())
+        .limit(limit)
+    ).all()
+    
+    return [
+        {
+            "id": e.id,
+            "event_type": e.event_type,
+            "entity_type": e.entity_type,
+            "entity_id": e.entity_id,
+            "message": e.message,
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+        }
+        for e in events
+    ]
 
 
 @app.get("/")

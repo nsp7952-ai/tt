@@ -2,15 +2,30 @@ from typing import Optional, Dict, Any, List
 import httpx
 from app.config import settings
 from loguru import logger
+from sqlmodel import Session
+from app.database import engine
+from app.models import Setting
+
+
+def get_db_setting(key: str, default: str = "") -> str:
+    """Get setting value from database"""
+    try:
+        with Session(engine) as session:
+            setting = session.query(Setting).filter(Setting.key == key).first()
+            return setting.value if setting else default
+    except Exception:
+        # Fallback to env settings if DB is not available
+        return default
 
 
 class LLMService:
     """Сервис для работы с LLM (OpenAI-compatible API)."""
     
-    def __init__(self):
-        self.api_key = settings.LLM_API_KEY
-        self.base_url = settings.LLM_BASE_URL
-        self.model = settings.LLM_MODEL
+    def __init__(self, session: Optional[Session] = None):
+        # Try to get settings from DB first, fallback to env
+        self.api_key = get_db_setting("LLM_API_KEY", settings.LLM_API_KEY or "")
+        self.base_url = get_db_setting("LLM_BASE_URL", settings.LLM_BASE_URL or "https://api.openai.com/v1")
+        self.model = get_db_setting("LLM_MODEL", settings.LLM_MODEL or "gpt-4o")
         self.temperature = 0.2
         self.max_tokens = 4000
     
