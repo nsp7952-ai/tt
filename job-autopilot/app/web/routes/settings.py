@@ -13,16 +13,23 @@ router = APIRouter()
 class SettingsRequest(BaseModel):
     # LLM Configuration
     llm_api_key: Optional[str] = None
+    llm_api_key_keep_existing: bool = False  # Don't overwrite if True and value is empty
     llm_base_url: str = "https://api.openai.com/v1"
     llm_model: str = "gpt-4o"
     
     # Telegram Configuration
     telegram_api_id: Optional[str] = None
+    telegram_api_id_keep_existing: bool = False
     telegram_api_hash: Optional[str] = None
+    telegram_api_hash_keep_existing: bool = False
     telegram_reader_session: Optional[str] = None
+    telegram_reader_session_keep_existing: bool = False
     telegram_outreach_session: Optional[str] = None
+    telegram_outreach_session_keep_existing: bool = False
     telegram_bot_token: Optional[str] = None
+    telegram_bot_token_keep_existing: bool = False
     telegram_alerts_chat_id: Optional[str] = None
+    telegram_alerts_chat_id_keep_existing: bool = False
     
     # Scheduler
     vacancy_fetch_interval_minutes: int = 30
@@ -133,23 +140,27 @@ async def save_settings(data: SettingsRequest):
     """Save all settings"""
     try:
         # Save LLM settings
-        if data.llm_api_key:
+        if data.llm_api_key and not data.llm_api_key_keep_existing:
             save_setting("LLM_API_KEY", data.llm_api_key, is_secret=True)
+        elif data.llm_api_key_keep_existing and get_setting("LLM_API_KEY", "") == "":
+            # If keep_existing is True but no existing value, save anyway if new value provided
+            if data.llm_api_key:
+                save_setting("LLM_API_KEY", data.llm_api_key, is_secret=True)
         save_setting("LLM_BASE_URL", data.llm_base_url)
         save_setting("LLM_MODEL", data.llm_model)
         
-        # Save Telegram settings
-        if data.telegram_api_id:
+        # Save Telegram settings - only update if new value provided or no existing value
+        if data.telegram_api_id and not data.telegram_api_id_keep_existing:
             save_setting("TELEGRAM_API_ID", data.telegram_api_id, is_secret=True)
-        if data.telegram_api_hash:
+        if data.telegram_api_hash and not data.telegram_api_hash_keep_existing:
             save_setting("TELEGRAM_API_HASH", data.telegram_api_hash, is_secret=True)
-        if data.telegram_reader_session:
+        if data.telegram_reader_session and not data.telegram_reader_session_keep_existing:
             save_setting("TELEGRAM_READER_SESSION", data.telegram_reader_session, is_secret=True)
-        if data.telegram_outreach_session:
+        if data.telegram_outreach_session and not data.telegram_outreach_session_keep_existing:
             save_setting("TELEGRAM_OUTREACH_SESSION", data.telegram_outreach_session, is_secret=True)
-        if data.telegram_bot_token:
+        if data.telegram_bot_token and not data.telegram_bot_token_keep_existing:
             save_setting("TELEGRAM_BOT_TOKEN", data.telegram_bot_token, is_secret=True)
-        if data.telegram_alerts_chat_id:
+        if data.telegram_alerts_chat_id and not data.telegram_alerts_chat_id_keep_existing:
             save_setting("TELEGRAM_ALERTS_CHAT_ID", data.telegram_alerts_chat_id, is_secret=True)
         
         # Save Scheduler settings
