@@ -108,11 +108,13 @@ class TelegramChannelsSource:
                     cutoff_date = datetime.now(timezone.utc) - timedelta(hours=parse_depth_hours)
                     logger.info(f"Using parse depth: {parse_depth_hours} hours, cutoff date: {cutoff_date}")
                     
-                    # Получаем новые сообщения (последние 100, но с ограничением по дате)
+                    # Получаем новые сообщения (последние 500, но с ограничением по дате)
+                    # Итерируемся пока не достигнем last_msg_id или cutoff_date
                     new_messages_count = 0
-                    async for message in client.iter_messages(entity, limit=100):
+                    async for message in client.iter_messages(entity, limit=500):
                         # Останавливаемся если достигли последнего проверенного ID
                         if message.id <= last_msg_id:
+                            logger.debug(f"Stopping at message {message.id} <= last_msg_id {last_msg_id}")
                             break
                         
                         # Останавливаемся если сообщение старше cutoff даты
@@ -123,7 +125,7 @@ class TelegramChannelsSource:
                             msg_date = msg_date.replace(tzinfo=timezone.utc)
                         
                         if msg_date and msg_date < cutoff_date:
-                            logger.info(f"Message {message.id} is older than cutoff ({cutoff_date}), stopping")
+                            logger.info(f"Message {message.id} dated {msg_date} is older than cutoff ({cutoff_date}), stopping")
                             break
                         
                         if not message.text:
