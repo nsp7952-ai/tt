@@ -8,6 +8,7 @@ from app.services.agent_service import AgentService, ManualAgentProvider
 from app.services.stats_service import StatsService
 from app.services.alert_service import AlertService
 from app.services.scheduler_service import SchedulerService
+from app.services.outreach_service import OutreachService
 
 __all__ = [
     "FilterService",
@@ -20,4 +21,5 @@ __all__ = [
     "StatsService",
     "AlertService",
     "SchedulerService",
+    "OutreachService",
 ]

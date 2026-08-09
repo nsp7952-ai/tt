@@ -376,3 +376,111 @@ pytest tests/test_settings.py -v
 *.cache
 ```
 
+
+---
+
+## Изменения в Telegram Channels Testing Phase
+
+### Backend изменения
+
+#### Файл: `/app/services/outreach_service.py` (НОВЫЙ)
+
+**Добавлено:**
+- Новый сервис для управления outreach рассылками
+- Методы:
+  - `generate_outreach_message()` - генерация сообщения через LLM
+  - `send_telegram_outreach()` - отправка сообщения в Telegram
+  - `create_draft()` - создание черновика
+  - `get_pending_outreach()` - получение контактов ожидающих outreach
+  - `update_message_status()` - обновление статуса сообщения
+  - `get_all_messages()` - получение списка сообщений
+  - `get_stats()` - статистика по outreach
+
+#### Файл: `/app/services/vacancy_service.py`
+
+**Добавлено:**
+- Метод `process_telegram_vacancies()` - асинхронная обработка сообщений из Telegram
+  - Парсинг постов через LLM
+  - Создание вакансий с идемпотентностью (по URL hash)
+  - Извлечение Telegram и email контактов
+  - Дедупликация контактов
+  - Подсчет статистики обработки
+
+**Изменено:**
+- Добавлен импорт `loguru.logger` для логирования ошибок
+
+#### Файл: `/app/services/__init__.py`
+
+**Добавлено:**
+- Экспорт `OutreachService` в `__all__`
+
+### Frontend изменения
+
+Нет изменений в этой фазе.
+
+### Tests
+
+Unit тесты для новых сервисов будут добавлены в следующей итерации.
+
+### Как тестировать Telegram channels поиск
+
+```bash
+cd /workspace/job-autopilot
+python -c "
+from app.database import get_session
+from app.services.vacancy_service import VacancyService
+from app.services.llm_service import LLMService
+import asyncio
+
+session = next(get_session())
+vacancy_service = VacancyService(session)
+llm_service = LLMService()
+
+messages = [
+    {
+        'channel': 'test_channel',
+        'message_id': 123,
+        'text': '# Golang Developer\nКомпания: TechCorp\n@hr_techcorp'
+    }
+]
+
+async def test():
+    stats = await vacancy_service.process_telegram_vacancies(messages, llm_service)
+    print('Stats:', stats)
+
+asyncio.run(test())
+"
+```
+
+### Статус функционала
+
+✅ **Telegram Channels Source готов к работе:**
+- `TelegramChannelsSource.fetch()` - получение сообщений (требует настройки Telegram аккаунта)
+- `TelegramChannelsSource.parse_post()` - парсинг поста через LLM
+- `VacancyService.process_telegram_vacancies()` - обработка и сохранение вакансий/контактов
+- `OutreachService.send_telegram_outreach()` - отправка outreach сообщений
+- `ContactService` - дедупликация и управление контактами
+- `VacancyService` - идемпотентное создание вакансий
+
+⚠️ **Для полноценной работы требуется:**
+1. Настроить Telegram аккаунт в UI (Settings → Telegram)
+2. Получить API ID и API Hash от Telegram
+3. Создать session string через Telethon
+4. Добавить каналы для мониторинга в UI
+5. Настроить LLM API key для парсинга постов
+
+### Git ignore обновления
+
+**Файл: `/.gitignore`**
+
+Добавлены правила для data directory:
+```
+# Data directory (SQLite database, sessions, uploads)
+data/*.sqlite
+data/sessions/
+data/uploads/
+data/logs/
+data/screenshots/
+```
+
+Теперь файл `data/db.sqlite` игнорируется git и не будет коммититься.

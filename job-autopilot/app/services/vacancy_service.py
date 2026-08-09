@@ -5,6 +5,7 @@ import uuid
 
 from app.models import Vacancy, Application, Contact, EventLog
 from app.database import engine
+from loguru import logger
 
 
 class VacancyService:
@@ -23,6 +24,92 @@ class VacancyService:
         """Проверить, существует ли вакансия с таким URL."""
         vacancy_id = self.generate_vacancy_id(source, url)
         return self.session.get(Vacancy, vacancy_id)
+
+    async def process_telegram_vacancies(
+        self,
+        messages: List[Dict[str, Any]],
+        llm_service
+    ) -> Dict[str, Any]:
+        """
+        Обработать сообщения из Telegram и создать вакансии/контакты.
+        Возвращает статистику обработки.
+        """
+        stats = {
+            "processed": 0,
+            "vacancies_created": 0,
+            "contacts_created": 0,
+            "duplicates": 0,
+            "errors": 0
+        }
+
+        for msg in messages:
+            try:
+                stats["processed"] += 1
+
+                # Парсим пост через LLM
+                parsed = await llm_service.parse_telegram_post(msg["text"])
+
+                if not parsed or not parsed.get("is_vacancy"):
+                    logger.debug(f"Message {msg['message_id']} is not a vacancy")
+                    continue
+
+                # Создаем URL (для Telegram используем ссылку на сообщение)
+                url = f"https://t.me/{msg['channel']}/{msg['message_id']}"
+
+                # Создаем или обновляем вакансию
+                vacancy = self.create_or_update(
+                    source="telegram_channels",
+                    url=url,
+                    title=parsed.get("title") or "Unknown",
+                    company=parsed.get("company"),
+                    location=None,
+                    remote=parsed.get("remote", False),
+                    grade_hint=parsed.get("grade"),
+                    salary_text=parsed.get("salary_text"),
+                    description_text=msg["text"],
+                    raw_json=parsed,
+                    status="new"
+                )
+
+                if vacancy:
+                    stats["vacancies_created"] += 1
+
+                    # Извлекаем контакты
+                    if parsed.get("contact_tg"):
+                        from app.services.contact_service import ContactService
+                        contact_service = ContactService(self.session)
+                        contact, is_new = contact_service.create_or_get(
+                            source="telegram_channels",
+                            contact_type="telegram",
+                            value_raw=parsed["contact_tg"],
+                            vacancy_id=vacancy.id,
+                            company=parsed.get("company")
+                        )
+                        if is_new:
+                            stats["contacts_created"] += 1
+                        else:
+                            stats["duplicates"] += 1
+
+                    if parsed.get("contact_email"):
+                        from app.services.contact_service import ContactService
+                        contact_service = ContactService(self.session)
+                        contact, is_new = contact_service.create_or_get(
+                            source="telegram_channels",
+                            contact_type="email",
+                            value_raw=parsed["contact_email"],
+                            vacancy_id=vacancy.id,
+                            company=parsed.get("company")
+                        )
+                        if is_new:
+                            stats["contacts_created"] += 1
+                        else:
+                            stats["duplicates"] += 1
+
+            except Exception as e:
+                logger.error(f"Error processing Telegram message: {e}")
+                stats["errors"] += 1
+
+        return stats
     
     def create_or_update(
         self,
