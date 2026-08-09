@@ -1,4 +1,4 @@
-Ниже — готовый подробный Markdown для кодового агента. Его можно вставить в Codex, Claude, Cursor, Windsurf или другой coding agent как спеку проекта.
+test Ниже — готовый подробный Markdown для кодового агента. Его можно вставить в Codex, Claude, Cursor, Windsurf или другой coding agent как спеку проекта.
 
 ---
 
