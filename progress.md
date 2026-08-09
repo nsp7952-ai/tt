@@ -302,6 +302,12 @@ DRY_RUN=true
 
 #### Файл: `/app/web/routes/settings.py`
 
+**Изменено:**
+- Все endpoints теперь используют dependency injection `session: Session = Depends(get_session)` вместо создания новой сессии внутри каждого endpoint
+- Helper функции `get_setting()` и `save_setting()` теперь принимают `session` как параметр
+- Логика `save_settings()` теперь проверяет флаги `keep_existing` перед перезаписью секретов
+- Если `keep_existing=True` и значение пустое - существующее значение сохраняется
+
 **Добавлено:**
 - Новые поля в `SettingsRequest` для флагов `keep_existing`:
   - `llm_api_key_keep_existing`
@@ -311,10 +317,6 @@ DRY_RUN=true
   - `telegram_outreach_session_keep_existing`
   - `telegram_bot_token_keep_existing`
   - `telegram_alerts_chat_id_keep_existing`
-
-**Изменено:**
-- Логика `save_settings()` теперь проверяет флаги `keep_existing` перед перезаписью секретов
-- Если `keep_existing=True` и значение пустое - существующее значение сохраняется
 
 ### Frontend изменения
 
@@ -328,7 +330,7 @@ DRY_RUN=true
    
 2. **Expandable Guides:**
    - LLM API Key Guide (OpenAI, Anthropic, OpenRouter)
-   - Chat ID Guide (для личных чатов и групп/каналов)
+   - Chat ID Guide (для личных чатов и групп/каналов) - включает 3 способа получения: через @userinfobot, через getUpdates API, для групп/каналов
    - Session String Guide (с примером кода на Python)
 
 3. **Alpine.js state variables:**
@@ -339,6 +341,7 @@ DRY_RUN=true
 **Изменено:**
 - Функция `saveSettings()` теперь отправляет payload с флагами `keep_existing`
 - Опции Browser Agent Provider переведены на русский язык
+- Тултипы добавлены для всех полей Telegram конфигурации
 
 ### Tests
 
@@ -358,5 +361,18 @@ DRY_RUN=true
 ```bash
 cd /workspace/job-autopilot
 pytest tests/test_settings.py -v
+```
+
+Все 7 тестов проходят успешно ✅
+
+### Git ignore обновления
+
+**Файл: `/.gitignore`**
+
+Добавлены правила для кэша:
+```
+# Cache
+.cache/
+*.cache
 ```
 
