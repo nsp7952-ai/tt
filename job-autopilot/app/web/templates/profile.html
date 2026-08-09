@@ -1,28 +1,106 @@
 {% extends "base.html" %}
 {% block title %}Profile - Job Autopilot{% endblock %}
 {% block content %}
-<div class="px-4 py-8">
+<div class="px-4 py-8" x-data="profileApp()">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Profile Context</h1>
     <div class="bg-white shadow rounded-lg p-6">
-        <form class="space-y-4">
+        <form @submit.prevent="saveProfile()" class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Name</label>
-                <input type="text" class="mt-1 w-full p-2 border rounded-md" value="{{ profile.name if profile else '' }}">
+                <input type="text" x-model="profile.name" class="mt-1 w-full p-2 border rounded-md">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Markdown Bio</label>
-                <textarea class="mt-1 w-full h-48 p-2 border rounded-md font-mono text-sm" placeholder="Your professional bio...">{{ profile.markdown_text if profile else '' }}</textarea>
+                <textarea x-model="profile.markdown_text" class="mt-1 w-full h-48 p-2 border rounded-md font-mono text-sm" placeholder="Your professional bio..."></textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tone</label>
+                    <select x-model="profile.tone" class="mt-1 w-full p-2 border rounded-md">
+                        <option value="professional">Professional</option>
+                        <option value="friendly">Friendly</option>
+                        <option value="casual">Casual</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Min Grade</label>
+                    <select x-model="profile.min_grade" class="mt-1 w-full p-2 border rounded-md">
+                        <option value="junior">Junior</option>
+                        <option value="middle">Middle</option>
+                        <option value="senior">Senior</option>
+                        <option value="lead">Lead</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" x-model="profile.remote_only" class="form-checkbox h-5 w-5 text-blue-600">
+                        <span class="text-gray-700">Remote Only</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" x-model="profile.allow_full_stack" class="form-checkbox h-5 w-5 text-blue-600">
+                        <span class="text-gray-700">Allow Full Stack</span>
+                    </label>
+                </div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Tone</label>
-                <select class="mt-1 w-full p-2 border rounded-md">
-                    <option value="professional" {{ 'selected' if profile and profile.tone == 'professional' else '' }}>Professional</option>
-                    <option value="friendly" {{ 'selected' if profile and profile.tone == 'friendly' else '' }}>Friendly</option>
-                    <option value="casual" {{ 'selected' if profile and profile.tone == 'casual' else '' }}>Casual</option>
-                </select>
+                <label class="block text-sm font-medium text-gray-700">Salary Expectation</label>
+                <input type="text" x-model="profile.salary_expectation" class="mt-1 w-full p-2 border rounded-md" placeholder="$80k - $120k">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Constraints</label>
+                <textarea x-model="profile.constraints_text" class="mt-1 w-full h-24 p-2 border rounded-md text-sm" placeholder="Additional constraints for job search..."></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Stop Words</label>
+                <textarea x-model="profile.stop_words_text" class="mt-1 w-full h-24 p-2 border rounded-md text-sm" placeholder="Words that should exclude vacancies..."></textarea>
             </div>
             <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">Save Profile</button>
+            <span x-show="saved" class="ml-4 text-green-600">Saved!</span>
         </form>
     </div>
 </div>
+
+<script>
+function profileApp() {
+    return {
+        profile: {
+            name: '',
+            markdown_text: '',
+            tone: 'professional',
+            min_grade: 'middle',
+            remote_only: true,
+            allow_full_stack: true,
+            salary_expectation: null,
+            constraints_text: '',
+            stop_words_text: ''
+        },
+        saved: false,
+        
+        init() {
+            fetch('/api/profile/')
+                .then(r => r.json())
+                .then(data => {
+                    if (data) {
+                        this.profile = data;
+                    }
+                });
+        },
+        
+        saveProfile() {
+            fetch('/api/profile/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(this.profile)
+            }).then(() => {
+                this.saved = true;
+                setTimeout(() => this.saved = false, 2000);
+            });
+        }
+    }
+}
+</script>
 {% endblock %}

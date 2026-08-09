@@ -1,34 +1,63 @@
 ```
-# Database
-job-autopilot/data/db.sqlite
-
-# Dependencies
-.venv/
-venv/
-node_modules/
-
-# Compiled Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Logs and temp files
-*.log
-*.tmp
-*.swp
+# Database files
+*.sqlite
+*.db
 
 # Environment
 .env
 .env.local
 *.env.*
 
-# Editors
-.vscode/
-.idea/
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+pip-log.txt
+pipenv.lock
 
 # Build artifacts
 dist/
 build/
-target/
+*.egg-info/
+.coverage
+htmlcov/
+coverage/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+.directory
+*.nfs*
+*.swp
+*.swo
+*~
+
+# Python specific
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+
+# Testing
+.pytest_cache/
+.nosetests
+coverage.xml
+*.cover
+.hypothesis/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 ```
