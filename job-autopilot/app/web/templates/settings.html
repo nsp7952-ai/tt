@@ -39,6 +39,39 @@
                     <input type="text" x-model="settings.llm_model" placeholder="gpt-4o" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <p class="text-xs text-gray-500 mt-1">Recommended: gpt-4o, gpt-4-turbo, or claude-3-opus</p>
                 </div>
+                
+                <!-- LLM API Key Guide -->
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <button @click="showLLMGuide = !showLLMGuide" class="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                        Как получить LLM API ключ?
+                    </button>
+                    <div x-show="showLLMGuide" class="mt-3 text-xs text-gray-700 space-y-2">
+                        <p><strong>OpenAI:</strong></p>
+                        <ol class="list-decimal list-inside space-y-1 ml-4">
+                            <li>Зарегистрируйтесь на <a href="https://platform.openai.com" target="_blank" class="text-blue-600 hover:underline">platform.openai.com</a></li>
+                            <li>Перейдите в раздел <a href="https://platform.openai.com/api-keys" target="_blank" class="text-blue-600 hover:underline">API Keys</a></li>
+                            <li>Нажмите "Create new secret key"</li>
+                            <li>Скопируйте ключ (начинается с sk-...)</li>
+                            <li>При необходимости пополните баланс в Billing разделе</li>
+                        </ol>
+                        <p class="mt-2"><strong>Anthropic (Claude):</strong></p>
+                        <ol class="list-decimal list-inside space-y-1 ml-4">
+                            <li>Зарегистрируйтесь на <a href="https://console.anthropic.com" target="_blank" class="text-blue-600 hover:underline">console.anthropic.com</a></li>
+                            <li>Перейдите в "Get your API keys"</li>
+                            <li>Создайте новый ключ</li>
+                        </ol>
+                        <p class="mt-2"><strong>OpenRouter (доступ к разным моделям):</strong></p>
+                        <ol class="list-decimal list-inside space-y-1 ml-4">
+                            <li>Зарегистрируйтесь на <a href="https://openrouter.ai" target="_blank" class="text-blue-600 hover:underline">openrouter.ai</a></li>
+                            <li>Перейдите в "Keys" в личном кабинете</li>
+                            <li>Создайте новый ключ</li>
+                            <li>Используйте Base URL: https://openrouter.ai/api/v1</li>
+                        </ol>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -63,13 +96,25 @@
                     </ol>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">API ID</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                        API ID
+                        <button @click="$dispatch('tooltip', {title: 'Зачем нужен API ID?', content: 'API ID и API Hash — это credentials вашего Telegram приложения.<br><br>Они нужны для:<br>• Чтения каналов через Telethon<br>• Отправки сообщений от имени пользователя<br>• Работы с Telegram API без официального бота'})" class="text-gray-400 hover:text-blue-500">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+                        </button>
+                    </label>
                     <input type="text" x-model="settings.telegram_api_id" placeholder="12345678" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Получите на my.telegram.org/apps</p>
                     <div x-show="settings.telegram_api_id_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">API Hash</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                        API Hash
+                        <button @click="$dispatch('tooltip', {title: 'Зачем нужен API Hash?', content: 'API Hash используется вместе с API ID для аутентификации в Telegram API.<br><br>Это секретный ключ, который нельзя передавать третьим лицам.<br><br>Хранится зашифрованным в базе данных.'})" class="text-gray-400 hover:text-blue-500">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+                        </button>
+                    </label>
                     <input type="password" x-model="settings.telegram_api_hash" placeholder="abc123def456..." class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Секретный хэш приложения Telegram</p>
                     <div x-show="settings.telegram_api_hash_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
                 </div>
                 <div>
@@ -77,6 +122,36 @@
                     <input type="password" x-model="settings.telegram_reader_session" placeholder="Session string for reading channels" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <p class="text-xs text-gray-500 mt-1">Session string for user account to read private channels</p>
                     <div x-show="settings.telegram_reader_session_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
+                    
+                    <!-- Session String Guide -->
+                    <div class="mt-3 p-3 bg-purple-50 rounded border border-purple-200">
+                        <button @click="showSessionGuide = !showSessionGuide" class="flex items-center text-xs font-medium text-purple-800 hover:text-purple-900">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                            Как получить Session String?
+                        </button>
+                        <div x-show="showSessionGuide" class="mt-2 text-xs text-purple-900 space-y-2">
+                            <p>Session string нужен для работы с Telegram через Telethon/Pyrogram.</p>
+                            <p><strong>Способ 1 - Через CLI (рекомендуется):</strong></p>
+                            <ol class="list-decimal list-inside space-y-1 ml-3">
+                                <li>Установите зависимости: <code class="bg-purple-100 px-1 rounded">pip install telethon</code></li>
+                                <li>Запустите скрипт для получения сессии:</li>
+                            </ol>
+                            <pre class="bg-gray-800 text-white p-2 rounded text-xs overflow-x-auto">python3 -c "
+from telethon.sync import TelegramClient
+api_id = YOUR_API_ID
+api_hash = 'YOUR_API_HASH'
+client = TelegramClient('session', api_id, api_hash)
+client.start()
+print(client.session.save())
+client.disconnect()
+"</pre>
+                            <p class="mt-2"><strong>Способ 2 - Готовые скрипты:</strong></p>
+                            <p class="ml-3">Используйте готовые скрипты типа <a href="https://github.com/tangyoha/telegram_media_downloader" target="_blank" class="underline">string-session generators</a> на GitHub.</p>
+                            <p class="mt-2 text-red-600"><strong>Важно:</strong> Никогда не передавайте session string третьим лицам!</p>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Outreach Session (optional)</label>
@@ -91,10 +166,65 @@
                     <div x-show="settings.telegram_bot_token_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Alerts Chat ID</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                        Alerts Chat ID
+                        <button @click="$dispatch('tooltip', {title: 'Зачем нужен Chat ID?', content: 'Chat ID определяет куда бот будет отправлять уведомления:<br><br>• <strong>Личный чат</strong> — бот пишет вам лично<br>• <strong>Группа/канал</strong> — бот пишет в общий чат команды<br><br>Без этого параметра алерты не будут работать.'})" class="text-gray-400 hover:text-blue-500">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+                        </button>
+                    </label>
                     <input type="text" x-model="settings.telegram_alerts_chat_id" placeholder="-1001234567890" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <p class="text-xs text-gray-500 mt-1">Chat/channel ID where bot sends alerts (use negative for groups/channels)</p>
+                    <p class="text-xs text-gray-500 mt-1">ID чата куда бот отправляет алерты. Отрицательное число для групп/каналов.</p>
                     <div x-show="settings.telegram_alerts_chat_id_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
+                    
+                    <!-- Chat ID Guide -->
+                    <div class="mt-3 p-3 bg-yellow-50 rounded border border-yellow-200">
+                        <button @click="showChatIDGuide = !showChatIDGuide" class="flex items-center text-xs font-medium text-yellow-800 hover:text-yellow-900">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                            Как получить Chat ID?
+                        </button>
+                        <div x-show="showChatIDGuide" class="mt-2 text-xs text-yellow-900 space-y-3">
+                            <div>
+                                <p class="font-semibold text-yellow-800 mb-1">Способ 1: Личный Chat ID (рекомендуется для начала)</p>
+                                <ol class="list-decimal list-inside space-y-1 ml-3">
+                                    <li>Откройте Telegram и найдите бота <a href="https://t.me/userinfobot" target="_blank" class="underline font-medium">@userinfobot</a></li>
+                                    <li>Нажмите <strong>/start</strong> или отправьте любое сообщение</li>
+                                    <li>Бот покажет ваш <strong>Id</strong> (например: 123456789)</li>
+                                    <li>Скопируйте это число в поле выше</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-yellow-800 mb-1">Способ 2: Через getUpdates API (для продвинутых)</p>
+                                <ol class="list-decimal list-inside space-y-1 ml-3">
+                                    <li>Создайте бота через <a href="https://t.me/botfather" target="_blank" class="underline">@BotFather</a> и получите токен</li>
+                                    <li>Отправьте любое сообщение вашему новому боту</li>
+                                    <li>Откройте в браузере:<br><code class="bg-yellow-100 px-2 py-1 rounded block mt-1">https://api.telegram.org/bot&lt;ВАШ_ТОКЕН&gt;/getUpdates</code></li>
+                                    <li>Найдите в ответе JSON поле <code>"chat":{"id":...}</code></li>
+                                    <li>Для личного чата ID положительный, для группы — отрицательный</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-yellow-800 mb-1">Способ 3: Для группы/канала</p>
+                                <ol class="list-decimal list-inside space-y-1 ml-3">
+                                    <li>Добавьте вашего бота-алертера в группу/канал (сделайте администратором если нужно)</li>
+                                    <li>Отправьте любое сообщение в эту группу</li>
+                                    <li>Используйте Способ 2 с <code>/getUpdates</code></li>
+                                    <li>Найдите ID вашей группы (будет с префиксом <code>-100</code> для каналов или просто отрицательный для групп)</li>
+                                    <li>Пример: <code>-1001234567890</code> (канал) или <code>-123456789</code> (группа)</li>
+                                </ol>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded border border-red-200">
+                                <p class="font-semibold text-red-800">⚠️ Важно:</p>
+                                <ul class="list-disc list-inside space-y-1 ml-2 mt-1">
+                                    <li>Для <strong>личных чатов</strong> ID всегда <span class="font-mono bg-red-100 px-1 rounded">положительный</span> (например: 123456789)</li>
+                                    <li>Для <strong>групп</strong> ID всегда <span class="font-mono bg-red-100 px-1 rounded">отрицательный</span> (например: -123456789)</li>
+                                    <li>Для <strong>каналов</strong> ID всегда с <span class="font-mono bg-red-100 px-1 rounded">-100</span> в начале (например: -1001234567890)</li>
+                                    <li>Бот должен быть добавлен в группу/канал чтобы получить её ID</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -127,21 +257,74 @@
         </div>
 
         <!-- Browser Agent Settings -->
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="bg-white shadow rounded-lg p-6" x-data="{ selectedProvider: settings.browser_agent_provider }">
             <h2 class="text-xl font-semibold mb-4 flex items-center">
                 <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
                 </svg>
                 Browser Agent Provider
+                <button @click="$dispatch('tooltip', {title: 'Browser Agent Provider', content: 'Выберите способ взаимодействия с сайтами вакансий (hh.ru, Hirify). От выбора зависит как система будет выполнять поиск и отклики.'})" class="ml-2 text-gray-400 hover:text-blue-500">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+                </button>
             </h2>
             <div class="space-y-4">
-                <select x-model="settings.browser_agent_provider" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="manual">Manual - Manual data entry</option>
-                    <option value="clipboard">Clipboard - Read from clipboard</option>
-                    <option value="browser_bridge">Browser Bridge - Browser extension</option>
-                    <option value="api">API - External API integration</option>
+                <select x-model="selectedProvider" @change="settings.browser_agent_provider = selectedProvider" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="manual">Manual - Ручной ввод данных</option>
+                    <option value="clipboard">Clipboard - Копирование из буфера</option>
+                    <option value="browser_bridge">Browser Bridge - Браузерное расширение</option>
+                    <option value="api">API - Внешняя интеграция</option>
                 </select>
-                <p class="text-xs text-gray-500">Select how the agent interacts with job sites</p>
+                
+                <!-- Dynamic description based on selection -->
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div x-show="selectedProvider === 'manual'" class="text-sm">
+                        <p class="font-medium text-gray-800 mb-2">📝 Manual (Ручной режим)</p>
+                        <p class="text-gray-600 mb-2">Вы копируете промпт из системы и вставляете его в Codex/браузерный агент вручную. Результат также вставляется вручную.</p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li><strong>Плюсы:</strong> Полный контроль, не требует настройки</li>
+                            <li><strong>Минусы:</strong> Требует ручного вмешательства для каждой задачи</li>
+                            <li><strong>Когда использовать:</strong> Для начала работы, тестирования, или если другие режимы недоступны</li>
+                        </ul>
+                    </div>
+                    <div x-show="selectedProvider === 'clipboard'" class="text-sm">
+                        <p class="font-medium text-gray-800 mb-2">📋 Clipboard (Буфер обмена)</p>
+                        <p class="text-gray-600 mb-2">Система автоматически открывает Codex и копирует промпт в буфер обмена. Вам нужно только вставить его.</p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li><strong>Плюсы:</strong> Частичная автоматизация, проще чем manual</li>
+                            <li><strong>Минусы:</strong> Все еще требует ручного вставления и запуска</li>
+                            <li><strong>Когда использовать:</strong> Если хотите немного упростить процесс</li>
+                        </ul>
+                    </div>
+                    <div x-show="selectedProvider === 'browser_bridge'" class="text-sm">
+                        <p class="font-medium text-gray-800 mb-2">🌐 Browser Bridge (Браузерный мост)</p>
+                        <p class="text-gray-600 mb-2">Система использует Playwright для управления браузером с уже активной сессией Codex. Полностью автоматическая вставка промпта и получение результата.</p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li><strong>Плюсы:</strong> Полная автоматизация, не требует ручного вмешательства</li>
+                            <li><strong>Минусы:</strong> Экспериментальный режим, требует настройки, может быть нестабильным</li>
+                            <li><strong>Когда использовать:</strong> Для продакшена, когда нужна полная автоматизация</li>
+                            <li><strong>Требования:</strong> Установленный Playwright, настроенный профиль браузера</li>
+                        </ul>
+                    </div>
+                    <div x-show="selectedProvider === 'api'" class="text-sm">
+                        <p class="font-medium text-gray-800 mb-2">🔌 API (Внешний API)</p>
+                        <p class="text-gray-600 mb-2">Использование внешнего API для взаимодействия с браузерным агентом (если доступен).</p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li><strong>Плюсы:</strong> Интеграция с внешними сервисами</li>
+                            <li><strong>Минусы:</strong> Требует доступного API endpoint</li>
+                            <li><strong>Когда использовать:</strong> Если у вас есть совместимый API сервис</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <p class="text-xs text-blue-800">
+                        <strong>Рекомендация:</strong> Начните с <code class="bg-blue-100 px-1 rounded">Manual</code> режима для знакомства с системой. 
+                        Для продакшена настройте <code class="bg-blue-100 px-1 rounded">Browser Bridge</code>.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -215,6 +398,9 @@ function settingsApp() {
         saving: false,
         message: '',
         messageType: 'success',
+        showLLMGuide: false,
+        showChatIDGuide: false,
+        showSessionGuide: false,
         newChannel: { username: '', name: '' },
         settings: {
             llm_api_key: '',
@@ -256,12 +442,44 @@ function settingsApp() {
         async saveSettings() {
             this.saving = true;
             try {
+                // Prepare payload - send actual values entered by user
+                // keep_existing flag means "don't clear existing value if new value is empty"
+                const payload = {
+                    // LLM Configuration
+                    llm_api_key: this.settings.llm_api_key || '',
+                    llm_api_key_keep_existing: this.settings.llm_api_key_set && !this.settings.llm_api_key,
+                    llm_base_url: this.settings.llm_base_url,
+                    llm_model: this.settings.llm_model,
+                    
+                    // Telegram Configuration - send actual values
+                    telegram_api_id: this.settings.telegram_api_id || '',
+                    telegram_api_id_keep_existing: this.settings.telegram_api_id_set && !this.settings.telegram_api_id,
+                    telegram_api_hash: this.settings.telegram_api_hash || '',
+                    telegram_api_hash_keep_existing: this.settings.telegram_api_hash_set && !this.settings.telegram_api_hash,
+                    telegram_reader_session: this.settings.telegram_reader_session || '',
+                    telegram_reader_session_keep_existing: this.settings.telegram_reader_session_set && !this.settings.telegram_reader_session,
+                    telegram_outreach_session: this.settings.telegram_outreach_session || '',
+                    telegram_outreach_session_keep_existing: this.settings.telegram_outreach_session_set && !this.settings.telegram_outreach_session,
+                    telegram_bot_token: this.settings.telegram_bot_token || '',
+                    telegram_bot_token_keep_existing: this.settings.telegram_bot_token_set && !this.settings.telegram_bot_token,
+                    telegram_alerts_chat_id: this.settings.telegram_alerts_chat_id || '',
+                    telegram_alerts_chat_id_keep_existing: this.settings.telegram_alerts_chat_id_set && !this.settings.telegram_alerts_chat_id,
+                    
+                    // Scheduler
+                    vacancy_fetch_interval_minutes: this.settings.vacancy_fetch_interval_minutes,
+                    telegram_monitor_interval_minutes: this.settings.telegram_monitor_interval_minutes,
+                    summary_interval_hours: this.settings.summary_interval_hours,
+                    
+                    // Browser agent
+                    browser_agent_provider: this.settings.browser_agent_provider
+                };
+
                 const response = await fetch('/settings/api/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.settings)
+                    body: JSON.stringify(payload)
                 });
-                
+
                 if (response.ok) {
                     this.showMessage('Settings saved successfully!', 'success');
                     this.loadSettings(); // Reload to update _set flags
@@ -276,6 +494,7 @@ function settingsApp() {
                 this.saving = false;
             }
         },
+        
         
         async addChannel() {
             if (!this.newChannel.username.trim()) return;
