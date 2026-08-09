@@ -366,13 +366,14 @@ client.disconnect()
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="channel.username_or_id"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="channel.name || '-'"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span x-text="(channel.parse_depth_hours || 168) + 'h'"></span>
+                                <button @click="updateParseDepth(channel.id, channel.parse_depth_hours)" class="text-blue-600 hover:text-blue-900 cursor-pointer" x-text="(channel.parse_depth_hours || 168) + 'h'"></button>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span :class="channel.enabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" x-text="channel.enabled ? 'Enabled' : 'Disabled'"></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button @click="toggleChannel(channel.id)" class="text-blue-600 hover:text-blue-900 mr-3" x-text="channel.enabled ? 'Disable' : 'Enable'"></button>
+                                <button @click="resetChannelHistory(channel.id)" class="text-purple-600 hover:text-purple-900 mr-3">🔄 Reset History</button>
                                 <button @click="deleteChannel(channel.id)" class="text-red-600 hover:text-red-900">Delete</button>
                             </td>
                         </tr>
@@ -565,6 +566,50 @@ function settingsApp() {
             } catch (error) {
                 console.error('Error deleting channel:', error);
                 this.showMessage('Error deleting channel: ' + error.message, 'error');
+            }
+        },
+        
+        async resetChannelHistory(channelId) {
+            if (!confirm('Are you sure you want to reset history for this channel? This will re-fetch all messages within the parse depth period.')) return;
+            
+            try {
+                const response = await fetch(`/settings/api/channels/${channelId}/reset-history`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    this.showMessage('Channel history reset! Ready to re-fetch messages.', 'success');
+                    this.loadSettings();
+                } else {
+                    const error = await response.json();
+                    this.showMessage('Error resetting history: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error resetting history:', error);
+                this.showMessage('Error resetting history: ' + error.message, 'error');
+            }
+        },
+        
+        async updateParseDepth(channelId, currentDepth) {
+            const newDepth = prompt('Enter parse depth in hours (e.g., 168 for 1 week):', currentDepth || 168);
+            if (!newDepth || isNaN(newDepth) || parseInt(newDepth) <= 0) return;
+            
+            try {
+                const params = new URLSearchParams({ parse_depth_hours: parseInt(newDepth) });
+                const response = await fetch(`/settings/api/channels/${channelId}/update-parse-depth?` + params, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    this.showMessage('Parse depth updated!', 'success');
+                    this.loadSettings();
+                } else {
+                    const error = await response.json();
+                    this.showMessage('Error updating parse depth: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error updating parse depth:', error);
+                this.showMessage('Error updating parse depth: ' + error.message, 'error');
             }
         },
         

@@ -1,8 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Vacancies - Job Autopilot{% endblock %}
 {% block content %}
-<div class="px-4 py-8">
+<div class="px-4 py-8" x-data="vacanciesApp()">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Vacancies</h1>
+    
+    <!-- Success/Error Messages -->
+    <div x-show="message" 
+         :class="messageType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+         class="mb-6 px-4 py-3 border rounded-lg flex items-center justify-between"
+         x-transition>
+        <span x-text="message"></span>
+        <button @click="message = ''" class="text-xl">&times;</button>
+    </div>
+    
     <div class="bg-white shadow rounded-lg overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -12,6 +22,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -22,12 +33,51 @@
                     <td class="px-6 py-4 text-sm text-gray-500">{{ vacancy.source }}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{{ vacancy.status }}</span></td>
                     <td class="px-6 py-4 text-sm text-gray-500">{{ vacancy.created_at.strftime('%Y-%m-%d') if vacancy.created_at else 'N/A' }}</td>
+                    <td class="px-6 py-4 text-right text-sm font-medium">
+                        <button @click="deleteVacancy('{{ vacancy.id }}')" class="text-red-600 hover:text-red-900">Delete</button>
+                    </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No vacancies yet</td></tr>
+                <tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No vacancies yet</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+function vacanciesApp() {
+    return {
+        message: '',
+        messageType: 'success',
+        
+        async deleteVacancy(vacancyId) {
+            if (!confirm('Are you sure you want to delete this vacancy? This will also delete all associated contacts.')) return;
+            
+            try {
+                const response = await fetch(`/vacancies/api/${vacancyId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    this.showMessage('Vacancy deleted successfully!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    const error = await response.json();
+                    this.showMessage('Error deleting vacancy: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting vacancy:', error);
+                this.showMessage('Error deleting vacancy: ' + error.message, 'error');
+            }
+        },
+        
+        showMessage(text, type) {
+            this.message = text;
+            this.messageType = type;
+            setTimeout(() => { this.message = ''; }, 5000);
+        }
+    }
+}
+</script>
 {% endblock %}

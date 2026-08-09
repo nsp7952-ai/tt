@@ -240,3 +240,32 @@ async def delete_channel(channel_id: int, session: Session = Depends(get_session
         return {"success": True, "message": "Channel deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/channels/{channel_id}/reset-history")
+async def reset_channel_history(channel_id: int, session: Session = Depends(get_session)):
+    """Reset channel history (clear last_message_id) to re-fetch old messages"""
+    try:
+        channel = session.query(TelegramChannel).filter(TelegramChannel.id == channel_id).first()
+        if not channel:
+            raise HTTPException(status_code=404, detail="Channel not found")
+        channel.last_message_id = None
+        channel.last_checked_at = None
+        session.commit()
+        return {"success": True, "message": "Channel history reset successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/channels/{channel_id}/update-parse-depth")
+async def update_channel_parse_depth(channel_id: int, parse_depth_hours: int, session: Session = Depends(get_session)):
+    """Update channel parse depth hours"""
+    try:
+        channel = session.query(TelegramChannel).filter(TelegramChannel.id == channel_id).first()
+        if not channel:
+            raise HTTPException(status_code=404, detail="Channel not found")
+        channel.parse_depth_hours = parse_depth_hours
+        session.commit()
+        return {"success": True, "message": "Parse depth updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
