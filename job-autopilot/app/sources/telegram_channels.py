@@ -58,12 +58,17 @@ class TelegramChannelsSource:
             api_hash = api_hash_setting.value
             session_string = session_string_setting.value
             
+            logger.info(f"Connecting to Telegram with API ID {api_id}...")
+            
             # Создаем клиент
             string_session = StringSession(session_string)
             client = TelegramClient(string_session, api_id, api_hash)
             
             # Подключаемся
             await client.connect()
+            
+            me = await client.get_me()
+            logger.info(f"Connected as @{me.username} ({me.first_name})")
             
             if not await client.is_user_authorized():
                 logger.error("Telegram session is not authorized")
@@ -74,19 +79,38 @@ class TelegramChannelsSource:
             
             for channel in channels:
                 try:
-                    # Получаем последние сообщения
-                    entity = await client.get_entity(channel.username_or_id)
+                    logger.info(f"Fetching channel: {channel.username_or_id} (last_msg_id={channel.last_message_id})")
+                    
+                    # Получаем entity канала
+                    try:
+                        entity = await client.get_entity(channel.username_or_id)
+                        logger.info(f"Successfully resolved entity: {entity.title}")
+                    except Exception as e:
+                        logger.error(f"Cannot get entity for {channel.username_or_id}: {e}")
+                        # Пробуем по ID если username не работает
+                        if channel.username_or_id.startswith('@'):
+                            logger.info(f"Trying without @ prefix: {channel.username_or_id[1:]}")
+                            try:
+                                entity = await client.get_entity(channel.username_or_id[1:])
+                                logger.info(f"Successfully resolved entity: {entity.title}")
+                            except Exception as e2:
+                                logger.error(f"Still cannot get entity: {e2}")
+                                continue
+                        continue
                     
                     # Получаем последнее проверенное сообщение
                     last_msg_id = channel.last_message_id or 0
                     
                     # Получаем новые сообщения (последние 50)
+                    new_messages_count = 0
                     async for message in client.iter_messages(entity, limit=50):
                         if message.id <= last_msg_id:
                             break
                         
                         if not message.text:
                             continue
+                        
+                        new_messages_count += 1
                         
                         # Извлекаем данные
                         msg_data = {
@@ -99,10 +123,13 @@ class TelegramChannelsSource:
                         }
                         
                         messages_data.append(msg_data)
+                        logger.info(f"Message {message.id}: {message.text[:100]}...")
                         
                         # Обновляем last_message_id
                         if last_msg_id == 0 or message.id > last_msg_id:
                             last_msg_id = message.id
+                    
+                    logger.info(f"Channel {channel.username_or_id}: fetched {new_messages_count} new messages")
                     
                     # Обновляем канал
                     if last_msg_id > 0:
@@ -110,18 +137,19 @@ class TelegramChannelsSource:
                         channel.last_checked_at = datetime.utcnow()
                         self.session.add(channel)
                         self.session.commit()
+                        logger.info(f"Updated channel {channel.username_or_id} last_message_id to {last_msg_id}")
                     
                 except Exception as e:
-                    logger.error(f"Error fetching channel {channel.username_or_id}: {e}")
+                    logger.error(f"Error fetching channel {channel.username_or_id}: {e}", exc_info=True)
                     continue
             
             await client.disconnect()
             
-            logger.info(f"Fetched {len(messages_data)} messages from Telegram channels")
+            logger.info(f"Total fetched {len(messages_data)} messages from Telegram channels")
             return messages_data
             
         except Exception as e:
-            logger.error(f"Error in Telegram fetch: {e}")
+            logger.error(f"Error in Telegram fetch: {e}", exc_info=True)
             return []
     
     async def parse_post(self, post_text: str) -> Optional[Dict[str, Any]]:
