@@ -43,16 +43,15 @@ class LLMService:
             logger.warning("LLM not configured (API key or base URL missing)")
             return None
         
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
         # Check if using Google AI Studio (Gemini)
         is_gemini = "generativelanguage.googleapis.com" in self.base_url
         
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
         if is_gemini:
-            # Gemini API format
+            # Gemini API format - API key as query parameter
             payload = {
                 "contents": [{
                     "parts": [{
@@ -68,10 +67,12 @@ class LLMService:
             if response_format == "json":
                 payload["generationConfig"]["responseMimeType"] = "application/json"
             
-            # Gemini endpoint includes model in the path
-            url = f"{self.base_url}/models/{self.model}:generateContent"
+            # Gemini endpoint includes model in the path, API key as query param
+            url = f"{self.base_url}/models/{self.model}:generateContent?key={self.api_key}"
         else:
-            # OpenAI-compatible format
+            # OpenAI-compatible format - API key in Authorization header
+            headers["Authorization"] = f"Bearer {self.api_key}"
+            
             payload = {
                 "model": self.model,
                 "messages": messages,
