@@ -108,35 +108,33 @@ class TelegramChannelsSource:
                     cutoff_date = datetime.now(timezone.utc) - timedelta(hours=parse_depth_hours)
                     logger.info(f"Using parse depth: {parse_depth_hours} hours, cutoff date: {cutoff_date}")
                     
-                    # Soft mode - игнорируем cutoff дату для первых 50 сообщений при начальном парсинге
-                    soft_mode = (last_msg_id == 0)
-                    soft_mode_counter = 50 if soft_mode else 0
-                    logger.info(f"Soft mode: {soft_mode}, counter: {soft_mode_counter}")
+                    # Soft mode - игнорируем last_msg_id для всех сообщений при начальном парсинге (когда last_message_id was None/0)
+                    # Это позволяет загрузить историю при первом запуске или после сброса
+                    soft_mode = (channel.last_message_id is None or channel.last_message_id == 0)
+                    logger.info(f"Soft mode: {soft_mode} (last_message_id was {channel.last_message_id})")
                     
                     # Получаем новые сообщения (последние 500, но с ограничением по дате)
-                    # Итерируемся пока не достигнем last_msg_id или cutoff_date
+                    # Итерируемся пока не достигнем cutoff_date
                     new_messages_count = 0
                     async for message in client.iter_messages(entity, limit=500):
-                        # Останавливаемся если достигли последнего проверенного ID
-                        if message.id <= last_msg_id:
-                            logger.debug(f"Stopping at message {message.id} <= last_msg_id {last_msg_id}")
-                            break
-                        
-                        # В soft mode игнорируем cutoff дату для первых 50 сообщений
-                        if soft_mode and soft_mode_counter > 0:
-                            soft_mode_counter -= 1
-                            logger.debug(f"Soft mode: skipping date check, counter={soft_mode_counter}")
-                        else:
-                            # Останавливаемся если сообщение старше cutoff даты
-                            # Убеждаемся что сравниваем timezone-aware datetime
-                            msg_date = message.date
-                            if msg_date and msg_date.tzinfo is None:
-                                # Если дата без timezone, считаем что это UTC
-                                msg_date = msg_date.replace(tzinfo=timezone.utc)
-                            
-                            if msg_date and msg_date < cutoff_date:
-                                logger.info(f"Message {message.id} dated {msg_date} is older than cutoff ({cutoff_date}), stopping")
+                        # В soft mode пропускаем проверку last_msg_id полностью
+                        if not soft_mode:
+                            # Останавливаемся если достигли последнего проверенного ID
+                            if message.id <= last_msg_id:
+                                logger.debug(f"Stopping at message {message.id} <= last_msg_id {last_msg_id}")
                                 break
+                        
+                        # Проверка даты
+                        msg_date = message.date
+                        if msg_date and msg_date.tzinfo is None:
+                            msg_date = msg_date.replace(tzinfo=timezone.utc)
+                        
+                        # В soft mode первые 100 сообщений игнорируют дату (для загрузки недавней истории)
+                        if soft_mode and new_messages_count < 100:
+                            pass  # Игнорируем дату для первых 100 сообщений
+                        elif msg_date and msg_date < cutoff_date:
+                            logger.info(f"Message {message.id} dated {msg_date} is older than cutoff ({cutoff_date}), stopping")
+                            break
                         
                         if not message.text:
                             continue
