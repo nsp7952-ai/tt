@@ -96,13 +96,25 @@
                     </ol>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">API ID</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                        API ID
+                        <button @click="$dispatch('tooltip', {title: 'Зачем нужен API ID?', content: 'API ID и API Hash — это credentials вашего Telegram приложения.<br><br>Они нужны для:<br>• Чтения каналов через Telethon<br>• Отправки сообщений от имени пользователя<br>• Работы с Telegram API без официального бота'})" class="text-gray-400 hover:text-blue-500">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+                        </button>
+                    </label>
                     <input type="text" x-model="settings.telegram_api_id" placeholder="12345678" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Получите на my.telegram.org/apps</p>
                     <div x-show="settings.telegram_api_id_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">API Hash</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                        API Hash
+                        <button @click="$dispatch('tooltip', {title: 'Зачем нужен API Hash?', content: 'API Hash используется вместе с API ID для аутентификации в Telegram API.<br><br>Это секретный ключ, который нельзя передавать третьим лицам.<br><br>Хранится зашифрованным в базе данных.'})" class="text-gray-400 hover:text-blue-500">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+                        </button>
+                    </label>
                     <input type="password" x-model="settings.telegram_api_hash" placeholder="abc123def456..." class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Секретный хэш приложения Telegram</p>
                     <div x-show="settings.telegram_api_hash_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
                 </div>
                 <div>
@@ -154,9 +166,14 @@ client.disconnect()
                     <div x-show="settings.telegram_bot_token_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Alerts Chat ID</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                        Alerts Chat ID
+                        <button @click="$dispatch('tooltip', {title: 'Зачем нужен Chat ID?', content: 'Chat ID определяет куда бот будет отправлять уведомления:<br><br>• <strong>Личный чат</strong> — бот пишет вам лично<br>• <strong>Группа/канал</strong> — бот пишет в общий чат команды<br><br>Без этого параметра алерты не будут работать.'})" class="text-gray-400 hover:text-blue-500">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+                        </button>
+                    </label>
                     <input type="text" x-model="settings.telegram_alerts_chat_id" placeholder="-1001234567890" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <p class="text-xs text-gray-500 mt-1">Chat/channel ID where bot sends alerts (use negative for groups/channels)</p>
+                    <p class="text-xs text-gray-500 mt-1">ID чата куда бот отправляет алерты. Отрицательное число для групп/каналов.</p>
                     <div x-show="settings.telegram_alerts_chat_id_set" class="text-xs text-green-600 mt-1">✓ Configured</div>
                     
                     <!-- Chat ID Guide -->
@@ -165,22 +182,47 @@ client.disconnect()
                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
-                            Как узнать Chat ID?
+                            Как получить Chat ID?
                         </button>
-                        <div x-show="showChatIDGuide" class="mt-2 text-xs text-yellow-900 space-y-2">
-                            <p><strong>Для личного чата:</strong></p>
-                            <ol class="list-decimal list-inside space-y-1 ml-3">
-                                <li>Отправьте сообщение боту <a href="https://t.me/getmyid_bot" target="_blank" class="underline">@getmyid_bot</a></li>
-                                <li>Бот пришлет ваш ID (положительное число)</li>
-                            </ol>
-                            <p class="mt-2"><strong>Для группы/канала:</strong></p>
-                            <ol class="list-decimal list-inside space-y-1 ml-3">
-                                <li>Добавьте вашего бота в группу/канал</li>
-                                <li>Отправьте любое сообщение в группе</li>
-                                <li>Перешлите это сообщение боту <a href="https://t.me/getmyid_bot" target="_blank" class="underline">@getmyid_bot</a></li>
-                                <li>Бот покажет ID группы (отрицательное число, например -1001234567890)</li>
-                            </ol>
-                            <p class="mt-2"><strong>Важно:</strong> Для каналов и групп ID всегда отрицательный!</p>
+                        <div x-show="showChatIDGuide" class="mt-2 text-xs text-yellow-900 space-y-3">
+                            <div>
+                                <p class="font-semibold text-yellow-800 mb-1">Способ 1: Личный Chat ID (рекомендуется для начала)</p>
+                                <ol class="list-decimal list-inside space-y-1 ml-3">
+                                    <li>Откройте Telegram и найдите бота <a href="https://t.me/userinfobot" target="_blank" class="underline font-medium">@userinfobot</a></li>
+                                    <li>Нажмите <strong>/start</strong> или отправьте любое сообщение</li>
+                                    <li>Бот покажет ваш <strong>Id</strong> (например: 123456789)</li>
+                                    <li>Скопируйте это число в поле выше</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-yellow-800 mb-1">Способ 2: Через getUpdates API (для продвинутых)</p>
+                                <ol class="list-decimal list-inside space-y-1 ml-3">
+                                    <li>Создайте бота через <a href="https://t.me/botfather" target="_blank" class="underline">@BotFather</a> и получите токен</li>
+                                    <li>Отправьте любое сообщение вашему новому боту</li>
+                                    <li>Откройте в браузере:<br><code class="bg-yellow-100 px-2 py-1 rounded block mt-1">https://api.telegram.org/bot&lt;ВАШ_ТОКЕН&gt;/getUpdates</code></li>
+                                    <li>Найдите в ответе JSON поле <code>"chat":{"id":...}</code></li>
+                                    <li>Для личного чата ID положительный, для группы — отрицательный</li>
+                                </ol>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-yellow-800 mb-1">Способ 3: Для группы/канала</p>
+                                <ol class="list-decimal list-inside space-y-1 ml-3">
+                                    <li>Добавьте вашего бота-алертера в группу/канал (сделайте администратором если нужно)</li>
+                                    <li>Отправьте любое сообщение в эту группу</li>
+                                    <li>Используйте Способ 2 с <code>/getUpdates</code></li>
+                                    <li>Найдите ID вашей группы (будет с префиксом <code>-100</code> для каналов или просто отрицательный для групп)</li>
+                                    <li>Пример: <code>-1001234567890</code> (канал) или <code>-123456789</code> (группа)</li>
+                                </ol>
+                            </div>
+                            <div class="bg-red-50 p-2 rounded border border-red-200">
+                                <p class="font-semibold text-red-800">⚠️ Важно:</p>
+                                <ul class="list-disc list-inside space-y-1 ml-2 mt-1">
+                                    <li>Для <strong>личных чатов</strong> ID всегда <span class="font-mono bg-red-100 px-1 rounded">положительный</span> (например: 123456789)</li>
+                                    <li>Для <strong>групп</strong> ID всегда <span class="font-mono bg-red-100 px-1 rounded">отрицательный</span> (например: -123456789)</li>
+                                    <li>Для <strong>каналов</strong> ID всегда с <span class="font-mono bg-red-100 px-1 rounded">-100</span> в начале (например: -1001234567890)</li>
+                                    <li>Бот должен быть добавлен в группу/канал чтобы получить её ID</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -400,26 +442,27 @@ function settingsApp() {
         async saveSettings() {
             this.saving = true;
             try {
-                // Prepare payload with keep_existing flags for secret fields
+                // Prepare payload - send actual values entered by user
+                // keep_existing flag means "don't clear existing value if new value is empty"
                 const payload = {
                     // LLM Configuration
-                    llm_api_key: this.settings.llm_api_key_set ? this.settings.llm_api_key : null,
+                    llm_api_key: this.settings.llm_api_key || '',
                     llm_api_key_keep_existing: this.settings.llm_api_key_set && !this.settings.llm_api_key,
                     llm_base_url: this.settings.llm_base_url,
                     llm_model: this.settings.llm_model,
                     
-                    // Telegram Configuration - only send new values, keep existing if field is set but empty
-                    telegram_api_id: this.settings.telegram_api_id_set ? this.settings.telegram_api_id : null,
+                    // Telegram Configuration - send actual values
+                    telegram_api_id: this.settings.telegram_api_id || '',
                     telegram_api_id_keep_existing: this.settings.telegram_api_id_set && !this.settings.telegram_api_id,
-                    telegram_api_hash: this.settings.telegram_api_hash_set ? this.settings.telegram_api_hash : null,
+                    telegram_api_hash: this.settings.telegram_api_hash || '',
                     telegram_api_hash_keep_existing: this.settings.telegram_api_hash_set && !this.settings.telegram_api_hash,
-                    telegram_reader_session: this.settings.telegram_reader_session_set ? this.settings.telegram_reader_session : null,
+                    telegram_reader_session: this.settings.telegram_reader_session || '',
                     telegram_reader_session_keep_existing: this.settings.telegram_reader_session_set && !this.settings.telegram_reader_session,
-                    telegram_outreach_session: this.settings.telegram_outreach_session_set ? this.settings.telegram_outreach_session : null,
+                    telegram_outreach_session: this.settings.telegram_outreach_session || '',
                     telegram_outreach_session_keep_existing: this.settings.telegram_outreach_session_set && !this.settings.telegram_outreach_session,
-                    telegram_bot_token: this.settings.telegram_bot_token_set ? this.settings.telegram_bot_token : null,
+                    telegram_bot_token: this.settings.telegram_bot_token || '',
                     telegram_bot_token_keep_existing: this.settings.telegram_bot_token_set && !this.settings.telegram_bot_token,
-                    telegram_alerts_chat_id: this.settings.telegram_alerts_chat_id_set ? this.settings.telegram_alerts_chat_id : null,
+                    telegram_alerts_chat_id: this.settings.telegram_alerts_chat_id || '',
                     telegram_alerts_chat_id_keep_existing: this.settings.telegram_alerts_chat_id_set && !this.settings.telegram_alerts_chat_id,
                     
                     // Scheduler

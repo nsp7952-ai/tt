@@ -1,1 +1,25 @@
-Nothing needs to be added to .gitignore since the changes only include source files (.py, .html, .md) and no build artifacts, dependencies, or temporary files.
+```
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Database
+data/db.sqlite
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Logs
+*.log
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+```

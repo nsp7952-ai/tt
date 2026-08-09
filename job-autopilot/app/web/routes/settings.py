@@ -107,24 +107,34 @@ async def get_settings():
         db_channels = session.query(TelegramChannel).all()
         channels = [{"id": ch.id, "username_or_id": ch.username_or_id, "name": ch.name or "", "enabled": ch.enabled} for ch in db_channels]
     
+    # Get actual values for display (masked for secrets)
+    llm_api_key_val = get_setting("LLM_API_KEY", "")
+    telegram_api_id_val = get_setting("TELEGRAM_API_ID", "")
+    telegram_api_hash_val = get_setting("TELEGRAM_API_HASH", "")
+    telegram_reader_session_val = get_setting("TELEGRAM_READER_SESSION", "")
+    telegram_outreach_session_val = get_setting("TELEGRAM_OUTREACH_SESSION", "")
+    telegram_bot_token_val = get_setting("TELEGRAM_BOT_TOKEN", "")
+    telegram_alerts_chat_id_val = get_setting("TELEGRAM_ALERTS_CHAT_ID", "")
+    
     return SettingsResponse(
-        llm_api_key=None,
-        llm_api_key_set=get_setting("LLM_API_KEY", "") != "",
+        # Return masked values for fields that are set, empty string otherwise
+        llm_api_key=llm_api_key_val if llm_api_key_val else None,
+        llm_api_key_set=llm_api_key_val != "",
         llm_base_url=get_setting("LLM_BASE_URL", "https://api.openai.com/v1"),
         llm_model=get_setting("LLM_MODEL", "gpt-4o"),
         
-        telegram_api_id=None,
-        telegram_api_id_set=get_setting("TELEGRAM_API_ID", "") != "",
-        telegram_api_hash=None,
-        telegram_api_hash_set=get_setting("TELEGRAM_API_HASH", "") != "",
-        telegram_reader_session=None,
-        telegram_reader_session_set=get_setting("TELEGRAM_READER_SESSION", "") != "",
-        telegram_outreach_session=None,
-        telegram_outreach_session_set=get_setting("TELEGRAM_OUTREACH_SESSION", "") != "",
-        telegram_bot_token=None,
-        telegram_bot_token_set=get_setting("TELEGRAM_BOT_TOKEN", "") != "",
-        telegram_alerts_chat_id=None,
-        telegram_alerts_chat_id_set=get_setting("TELEGRAM_ALERTS_CHAT_ID", "") != "",
+        telegram_api_id=telegram_api_id_val if telegram_api_id_val else None,
+        telegram_api_id_set=telegram_api_id_val != "",
+        telegram_api_hash=telegram_api_hash_val if telegram_api_hash_val else None,
+        telegram_api_hash_set=telegram_api_hash_val != "",
+        telegram_reader_session=telegram_reader_session_val if telegram_reader_session_val else None,
+        telegram_reader_session_set=telegram_reader_session_val != "",
+        telegram_outreach_session=telegram_outreach_session_val if telegram_outreach_session_val else None,
+        telegram_outreach_session_set=telegram_outreach_session_val != "",
+        telegram_bot_token=telegram_bot_token_val if telegram_bot_token_val else None,
+        telegram_bot_token_set=telegram_bot_token_val != "",
+        telegram_alerts_chat_id=telegram_alerts_chat_id_val if telegram_alerts_chat_id_val else None,
+        telegram_alerts_chat_id_set=telegram_alerts_chat_id_val != "",
         
         vacancy_fetch_interval_minutes=int(get_setting("VACANCY_FETCH_INTERVAL_MINUTES", "30")),
         telegram_monitor_interval_minutes=int(get_setting("TELEGRAM_MONITOR_INTERVAL_MINUTES", "5")),
@@ -139,29 +149,48 @@ async def get_settings():
 async def save_settings(data: SettingsRequest):
     """Save all settings"""
     try:
-        # Save LLM settings
-        if data.llm_api_key and not data.llm_api_key_keep_existing:
+        # Save LLM settings - always save if value is provided (not None and not empty)
+        if data.llm_api_key is not None and data.llm_api_key != "":
             save_setting("LLM_API_KEY", data.llm_api_key, is_secret=True)
-        elif data.llm_api_key_keep_existing and get_setting("LLM_API_KEY", "") == "":
-            # If keep_existing is True but no existing value, save anyway if new value provided
-            if data.llm_api_key:
-                save_setting("LLM_API_KEY", data.llm_api_key, is_secret=True)
+        elif data.llm_api_key_keep_existing:
+            pass  # Keep existing value, don't overwrite
+        else:
+            # If no value and not keeping existing, clear the setting
+            save_setting("LLM_API_KEY", "", is_secret=True)
+            
         save_setting("LLM_BASE_URL", data.llm_base_url)
         save_setting("LLM_MODEL", data.llm_model)
         
-        # Save Telegram settings - only update if new value provided or no existing value
-        if data.telegram_api_id and not data.telegram_api_id_keep_existing:
+        # Save Telegram settings - save if value is provided
+        if data.telegram_api_id is not None and data.telegram_api_id != "":
             save_setting("TELEGRAM_API_ID", data.telegram_api_id, is_secret=True)
-        if data.telegram_api_hash and not data.telegram_api_hash_keep_existing:
+        elif not data.telegram_api_id_keep_existing:
+            save_setting("TELEGRAM_API_ID", "", is_secret=True)
+            
+        if data.telegram_api_hash is not None and data.telegram_api_hash != "":
             save_setting("TELEGRAM_API_HASH", data.telegram_api_hash, is_secret=True)
-        if data.telegram_reader_session and not data.telegram_reader_session_keep_existing:
+        elif not data.telegram_api_hash_keep_existing:
+            save_setting("TELEGRAM_API_HASH", "", is_secret=True)
+            
+        if data.telegram_reader_session is not None and data.telegram_reader_session != "":
             save_setting("TELEGRAM_READER_SESSION", data.telegram_reader_session, is_secret=True)
-        if data.telegram_outreach_session and not data.telegram_outreach_session_keep_existing:
+        elif not data.telegram_reader_session_keep_existing:
+            save_setting("TELEGRAM_READER_SESSION", "", is_secret=True)
+            
+        if data.telegram_outreach_session is not None and data.telegram_outreach_session != "":
             save_setting("TELEGRAM_OUTREACH_SESSION", data.telegram_outreach_session, is_secret=True)
-        if data.telegram_bot_token and not data.telegram_bot_token_keep_existing:
+        elif not data.telegram_outreach_session_keep_existing:
+            save_setting("TELEGRAM_OUTREACH_SESSION", "", is_secret=True)
+            
+        if data.telegram_bot_token is not None and data.telegram_bot_token != "":
             save_setting("TELEGRAM_BOT_TOKEN", data.telegram_bot_token, is_secret=True)
-        if data.telegram_alerts_chat_id and not data.telegram_alerts_chat_id_keep_existing:
+        elif not data.telegram_bot_token_keep_existing:
+            save_setting("TELEGRAM_BOT_TOKEN", "", is_secret=True)
+            
+        if data.telegram_alerts_chat_id is not None and data.telegram_alerts_chat_id != "":
             save_setting("TELEGRAM_ALERTS_CHAT_ID", data.telegram_alerts_chat_id, is_secret=True)
+        elif not data.telegram_alerts_chat_id_keep_existing:
+            save_setting("TELEGRAM_ALERTS_CHAT_ID", "", is_secret=True)
         
         # Save Scheduler settings
         save_setting("VACANCY_FETCH_INTERVAL_MINUTES", str(data.vacancy_fetch_interval_minutes))

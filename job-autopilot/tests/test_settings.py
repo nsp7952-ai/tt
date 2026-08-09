@@ -48,6 +48,7 @@ class TestSettingsRoutes:
         assert response.status_code == 200
         data = response.json()
         
+        # When no settings exist, get_setting returns "" which means _set should be False
         assert data["llm_api_key_set"] is False
         assert data["telegram_bot_token_set"] is False
         assert data["browser_agent_provider"] == "manual"
