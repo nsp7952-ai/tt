@@ -1,39 +1,242 @@
-```
+```gitignore
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.py~
-
-# Database
-data/db.sqlite
-
-# Environment
+*.pyc~
+*.pyo~
+.Python
+python_env/
+venv/
+.venv/
 .env
 .env.local
 .env.*
+pyproject.toml
+poetry.lock
+Pipfile
+Pipfile.lock
+requirements.txt
+requirements-dev.txt
+.tox/
+.coverage
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
 
 # Logs
 *.log
+*.log.*
 
 # Temporary files
 *.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE specific
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+nbproject/
+.settings/
+.cache/
+.project
+.classpath
+.factorypath
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.so
+*.dll
+*.exe
+*.out
+
+# Compression
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+
+# Coverage
+coverage/
+.coverage*
+
+# Testing
+.nyc_output/
+istanbul/
+.jest/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+.npm
+.yarn-integrity
+.yarn/
+package-lock.json
+yarn.lock
+
+# Gradle
+.gradle/
+build/
+
+# C/C++
+*.o
+*.a
+*.obj
+*.lib
+*.map
+*.suo
+*.sln
+*.user
+*.userosscache
+*.sln.docstates
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.prof
+vendor/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Ruby
+*.gem
+*.rbc
+.bundle/
+.coverage/
+.ruby-version
+.rubocop.yml
+.rubocop_todo.yml
+.rbs_collection_cache
+.rbenv-gemsets
+
+# Rust
+target/
+Cargo.lock
+*.so
+*.pdb
+
+# Julia
+julia-*/
+.JuliaUserPrefs.toml
+*.ji
+*.mem
+*.o
+*.so
+*.dylib
+*.dll
+deps/build.log
+deps/*.d
+deps/*.o
+deps/*.so
+deps/*.dylib
+deps/*.dll
+build/
+
+# Zig
+zig-cache/
+zig-out/
+
+# Docker
+.dockerignore
+docker-compose*.yml
+docker-compose*.yaml
+
+# Configuration
+config/
+.env
+.env.local
+.env.*
+!*.env.example
+!*.env.sample
+
+# Documentation
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Backup files
+*~
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# Editor swap files
+.swp
+.swo
+.*.swp
+.*.swo
 
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Dependencies
-.venv/
-venv/
-.mypy_cache/
-.pytest_cache/
+# Vim
+*.un~
+Session.vim
+.netrwhist
+*~
+# End of .gitignore
 ```

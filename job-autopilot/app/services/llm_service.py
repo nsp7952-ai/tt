@@ -48,32 +48,64 @@ class LLMService:
             "Content-Type": "application/json"
         }
         
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": self.temperature,
-            "max_tokens": self.max_tokens
-        }
+        # Check if using Google AI Studio (Gemini)
+        is_gemini = "generativelanguage.googleapis.com" in self.base_url
         
-        # Google AI Studio (Gemini) uses different parameter for JSON response
-        if response_format == "json":
-            # Check if using Google AI Studio
-            if "generativelanguage.googleapis.com" in self.base_url:
-                # Gemini uses response_mime_type for JSON
-                payload["response_mime_type"] = "application/json"
-            else:
-                # OpenAI uses response_format
+        if is_gemini:
+            # Gemini API format
+            payload = {
+                "contents": [{
+                    "parts": [{
+                        "text": f"{messages[0]['content']}\n\n{messages[1]['content']}"
+                    }]
+                }],
+                "generationConfig": {
+                    "temperature": self.temperature,
+                    "maxOutputTokens": self.max_tokens
+                }
+            }
+            
+            if response_format == "json":
+                payload["generationConfig"]["responseMimeType"] = "application/json"
+            
+            # Gemini endpoint includes model in the path
+            url = f"{self.base_url}/models/{self.model}:generateContent"
+        else:
+            # OpenAI-compatible format
+            payload = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": self.temperature,
+                "max_tokens": self.max_tokens
+            }
+            
+            if response_format == "json":
                 payload["response_format"] = {"type": "json_object"}
+            
+            url = f"{self.base_url}/chat/completions"
         
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
-                    f"{self.base_url}/chat/completions",
+                    url,
                     headers=headers,
                     json=payload
                 )
                 response.raise_for_status()
                 data = response.json()
+                
+                # Parse Gemini response format
+                if is_gemini:
+                    if "candidates" in data and len(data["candidates"]) > 0:
+                        content = data["candidates"][0]["content"]["parts"][0]["text"]
+                        # Wrap in OpenAI-like structure for compatibility
+                        return {
+                            "choices": [{
+                                "message": {"content": content}
+                            }]
+                        }
+                    return None
+                
                 return data
         except httpx.HTTPStatusError as e:
             logger.error(f"LLM API HTTP error: {e.response.status_code} - {e.response.text}")
