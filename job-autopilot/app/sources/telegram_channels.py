@@ -23,6 +23,7 @@ class TelegramChannelsSource:
         """
         Получить новые сообщения из Telegram каналов.
         Использует Telethon для чтения каналов.
+        Учитывает parse_depth_hours для каждого канала.
         """
         logger.info("Telegram channels source fetch called")
         
@@ -53,6 +54,7 @@ class TelegramChannelsSource:
         try:
             from telethon import TelegramClient
             from telethon.sessions import StringSession
+            from datetime import timedelta
             
             api_id = int(api_id_setting.value)
             api_hash = api_hash_setting.value
@@ -79,7 +81,7 @@ class TelegramChannelsSource:
             
             for channel in channels:
                 try:
-                    logger.info(f"Fetching channel: {channel.username_or_id} (last_msg_id={channel.last_message_id})")
+                    logger.info(f"Fetching channel: {channel.username_or_id} (last_msg_id={channel.last_message_id}, parse_depth_hours={channel.parse_depth_hours})")
                     
                     # Получаем entity канала
                     try:
@@ -101,10 +103,21 @@ class TelegramChannelsSource:
                     # Получаем последнее проверенное сообщение
                     last_msg_id = channel.last_message_id or 0
                     
-                    # Получаем новые сообщения (последние 50)
+                    # Вычисляем дату cutoff на основе parse_depth_hours
+                    parse_depth_hours = channel.parse_depth_hours or 168  # default 1 week
+                    cutoff_date = datetime.utcnow() - timedelta(hours=parse_depth_hours)
+                    logger.info(f"Using parse depth: {parse_depth_hours} hours, cutoff date: {cutoff_date}")
+                    
+                    # Получаем новые сообщения (последние 100, но с ограничением по дате)
                     new_messages_count = 0
-                    async for message in client.iter_messages(entity, limit=50):
+                    async for message in client.iter_messages(entity, limit=100):
+                        # Останавливаемся если достигли последнего проверенного ID
                         if message.id <= last_msg_id:
+                            break
+                        
+                        # Останавливаемся если сообщение старше cutoff даты
+                        if message.date and message.date < cutoff_date:
+                            logger.info(f"Message {message.id} is older than cutoff ({cutoff_date}), stopping")
                             break
                         
                         if not message.text:

@@ -329,15 +329,23 @@ Return strict JSON only:
   "is_vacancy": true/false,
   "title": "string or null",
   "company": "string or null",
-  "grade": "junior|middle|senior|unknown",
+  "grade": "junior|middle|senior|lead|unknown",
   "remote": true/false,
   "stack": [],
-  "contact_tg": "string or null",
-  "contact_email": "string or null",
-  "apply_url": "string or null",
+  "description": "string - full vacancy description text from the post",
+  "contact_tg": "string or null - Telegram username/handle (e.g. @username or just username)",
+  "contact_email": "string or null - email address",
+  "apply_url": "string or null - application URL, but NOT hh.ru links (exclude any hh.ru URLs)",
   "salary_text": "string or null",
   "reasons": []
-}"""
+}
+
+Important rules:
+- Extract the full description text from the post
+- For contacts: extract Telegram handles (starting with @ or just usernames), email addresses
+- For apply_url: extract any application links EXCEPT hh.ru links (hh.ru vacancies are processed by a separate agent)
+- If multiple contacts exist, pick the most relevant one for each type
+- Mark is_vacancy=false if this is not a job posting"""
         
         user_prompt = f"""Telegram post:
 {post_text}

@@ -1,47 +1,41 @@
-```python
+```
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.pyc.*
-*.pyo.*
-.Python
-venv/
-.venv/
-.env
-.env.local
-.env.*
-.pytest_cache/
-.mypy_cache/
-.coverage
-coverage/
-htmlcov/
 
-# Build artifacts
-build/
-dist/
-*.egg-info/
+# Database
+data/db.sqlite
 
 # Logs
 *.log
 
-# Temporary files
-*.tmp
-*.swp
-*.swo
+# Environment
+.env
+.env.local
+*.env.*
 
-# OS
-.DS_Store
-Thumbs.db
+# Dependencies
+.venv/
+venv/
+pip-log.txt
+pipenv.lock
 
-# Editors
-.vscode/
-.idea/
-```
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+.nox/
 
-Wait, let me reconsider. The only modified file is a Python source file (`job-autopilot/app/services/llm_service.py`), which is a source code file. There are no build artifacts, dependencies, or temporary files in the changes. According to rule #6, if the changes contain only source files and no build artifacts, dependencies, or temp files, I should output an empty .gitignore.
+# Pytest
+.pytest_cache/
 
-```python
+# MyPy
+.mypy_cache/
 
+# Build
+build/
+dist/
+*.egg-info/
 ```

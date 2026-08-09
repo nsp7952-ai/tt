@@ -55,6 +55,9 @@ class VacancyService:
 
                 # Создаем URL (для Telegram используем ссылку на сообщение)
                 url = f"https://t.me/{msg['channel_id'].lstrip('@')}/{msg['message_id']}"
+                
+                # Используем description из parsed или fallback на полный текст сообщения
+                description_text = parsed.get("description") or msg["text"]
 
                 # Создаем или обновляем вакансию
                 vacancy = self.create_or_update(
@@ -66,7 +69,7 @@ class VacancyService:
                     remote=parsed.get("remote", False),
                     grade_hint=parsed.get("grade"),
                     salary_text=parsed.get("salary_text"),
-                    description_text=msg["text"],
+                    description_text=description_text,
                     raw_json=parsed,
                     status="new"
                 )
@@ -74,7 +77,9 @@ class VacancyService:
                 if vacancy:
                     stats["vacancies_created"] += 1
 
-                    # Извлекаем контакты
+                    # Извлекаем контакты из parsed данных
+                    contact_created = False
+                    
                     if parsed.get("contact_tg"):
                         from app.services.contact_service import ContactService
                         contact_service = ContactService(self.session)
@@ -87,6 +92,7 @@ class VacancyService:
                         )
                         if is_new:
                             stats["contacts_created"] += 1
+                            contact_created = True
                         else:
                             stats["duplicates"] += 1
 
@@ -102,8 +108,29 @@ class VacancyService:
                         )
                         if is_new:
                             stats["contacts_created"] += 1
+                            contact_created = True
                         else:
                             stats["duplicates"] += 1
+                    
+                    # Если есть apply_url (не hh.ru), создаем контакт типа url
+                    if parsed.get("apply_url"):
+                        apply_url = parsed["apply_url"]
+                        # Исключаем hh.ru ссылки
+                        if "hh.ru" not in apply_url:
+                            from app.services.contact_service import ContactService
+                            contact_service = ContactService(self.session)
+                            contact, is_new = contact_service.create_or_get(
+                                source="telegram_channels",
+                                contact_type="url",
+                                value_raw=apply_url,
+                                vacancy_id=vacancy.id,
+                                company=parsed.get("company")
+                            )
+                            if is_new:
+                                stats["contacts_created"] += 1
+                                contact_created = True
+                            else:
+                                stats["duplicates"] += 1
 
             except Exception as e:
                 logger.error(f"Error processing Telegram message: {e}")
