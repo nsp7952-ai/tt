@@ -6,7 +6,7 @@ from app.services.filter_service import FilterService
 from loguru import logger
 import uuid
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 
 class TelegramChannelsSource:
@@ -23,6 +23,7 @@ class TelegramChannelsSource:
         """
         Получить новые сообщения из Telegram каналов.
         Использует Telethon для чтения каналов.
+        Учитывает parse_depth_hours для каждого канала.
         """
         logger.info("Telegram channels source fetch called")
         
@@ -53,6 +54,7 @@ class TelegramChannelsSource:
         try:
             from telethon import TelegramClient
             from telethon.sessions import StringSession
+            from datetime import timedelta
             
             api_id = int(api_id_setting.value)
             api_hash = api_hash_setting.value
@@ -79,7 +81,7 @@ class TelegramChannelsSource:
             
             for channel in channels:
                 try:
-                    logger.info(f"Fetching channel: {channel.username_or_id} (last_msg_id={channel.last_message_id})")
+                    logger.info(f"Fetching channel: {channel.username_or_id} (last_msg_id={channel.last_message_id}, parse_depth_hours={channel.parse_depth_hours})")
                     
                     # Получаем entity канала
                     try:
@@ -101,10 +103,37 @@ class TelegramChannelsSource:
                     # Получаем последнее проверенное сообщение
                     last_msg_id = channel.last_message_id or 0
                     
-                    # Получаем новые сообщения (последние 50)
+                    # Вычисляем дату cutoff на основе parse_depth_hours
+                    parse_depth_hours = channel.parse_depth_hours or 168  # default 1 week
+                    cutoff_date = datetime.now(timezone.utc) - timedelta(hours=parse_depth_hours)
+                    logger.info(f"Using parse depth: {parse_depth_hours} hours, cutoff date: {cutoff_date}")
+                    
+                    # Soft mode - игнорируем last_msg_id для всех сообщений при начальном парсинге (когда last_message_id was None/0)
+                    # Это позволяет загрузить историю при первом запуске или после сброса
+                    soft_mode = (channel.last_message_id is None or channel.last_message_id == 0)
+                    logger.info(f"Soft mode: {soft_mode} (last_message_id was {channel.last_message_id})")
+                    
+                    # Получаем новые сообщения (последние 500, но с ограничением по дате)
+                    # Итерируемся пока не достигнем cutoff_date
                     new_messages_count = 0
-                    async for message in client.iter_messages(entity, limit=50):
-                        if message.id <= last_msg_id:
+                    async for message in client.iter_messages(entity, limit=500):
+                        # В soft mode пропускаем проверку last_msg_id полностью
+                        if not soft_mode:
+                            # Останавливаемся если достигли последнего проверенного ID
+                            if message.id <= last_msg_id:
+                                logger.debug(f"Stopping at message {message.id} <= last_msg_id {last_msg_id}")
+                                break
+                        
+                        # Проверка даты
+                        msg_date = message.date
+                        if msg_date and msg_date.tzinfo is None:
+                            msg_date = msg_date.replace(tzinfo=timezone.utc)
+                        
+                        # В soft mode первые 100 сообщений игнорируют дату (для загрузки недавней истории)
+                        if soft_mode and new_messages_count < 100:
+                            pass  # Игнорируем дату для первых 100 сообщений
+                        elif msg_date and msg_date < cutoff_date:
+                            logger.info(f"Message {message.id} dated {msg_date} is older than cutoff ({cutoff_date}), stopping")
                             break
                         
                         if not message.text:
@@ -134,7 +163,7 @@ class TelegramChannelsSource:
                     # Обновляем канал
                     if last_msg_id > 0:
                         channel.last_message_id = last_msg_id
-                        channel.last_checked_at = datetime.utcnow()
+                        channel.last_checked_at = datetime.now(timezone.utc)
                         self.session.add(channel)
                         self.session.commit()
                         logger.info(f"Updated channel {channel.username_or_id} last_message_id to {last_msg_id}")

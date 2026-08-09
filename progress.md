@@ -5,7 +5,7 @@
 ## Последнее обновление
 
 **Дата:** 2026-08-09  
-**Статус:** Phase 1 завершен
+**Статус:** Phase 1 завершен, Google AI Studio интеграция добавлена
 
 ---
 
@@ -38,7 +38,7 @@
 #### 3. Сервисы
 Реализованы в `/app/services/`:
 - [x] `filter_service.py` - фильтрация вакансий
-- [x] `llm_service.py` - LLM интеграция
+- [x] `llm_service.py` - LLM интеграция (OpenAI + Google AI Studio)
 - [x] `vacancy_service.py` - управление вакансиями
 - [x] `contact_service.py` - управление контактами
 - [x] `agent_service.py` - управление задачами агента
@@ -210,6 +210,13 @@
   - test_save_browser_agent_provider
   - test_keep_existing_flag_prevents_overwrite
   - test_settings_response_includes_set_flags
+
+#### 4. Google AI Studio (Gemini) интеграция ✅
+- [x] Обновить config.py с дефолтными значениями для Google AI Studio
+- [x] Обновить llm_service.py для поддержки response_mime_type (Gemini)
+- [x] Обновить базу данных с новыми настройками LLM
+- [x] Добавить документацию по настройке Google AI Studio
+- [x] Автоматическое определение провайдера по base_url
 
 ---
 
@@ -484,3 +491,94 @@ data/screenshots/
 ```
 
 Теперь файл `data/db.sqlite` игнорируется git и не будет коммититься.
+
+---
+
+## Изменения в Google AI Studio Integration Phase (2026-08-09)
+
+### Проблема
+
+Сервис использовал OpenAI по умолчанию, но пользователь хотел использовать бесплатный Google AI Studio с моделью `gemini-1.5-flash`. При попытке использовать Google AI Studio возникали ошибки из-за различий в формате запросов.
+
+### Решение
+
+#### 1. Обновлен config.py
+
+**Файл:** `/app/config.py`
+
+**Изменения:**
+- Default `LLM_BASE_URL` изменен с `https://api.openai.com/v1` на `https://generativelanguage.googleapis.com/v1beta/openai/`
+- Default `LLM_MODEL` изменен с `gpt-4o` на `gemini-1.5-flash`
+- Добавлены комментарии о поддержке Google AI Studio
+
+#### 2. Обновлен llm_service.py
+
+**Файл:** `/app/services/llm_service.py`
+
+**Изменения:**
+- Метод `is_configured()` теперь проверяет наличие и API ключа, и base_url
+- Метод `_make_request()` автоматически определяет провайдер по base_url:
+  - Для Google AI Studio использует `response_mime_type: "application/json"`
+  - Для OpenAI и других использует `response_format: {type: "json_object"}`
+- Добавлена обработка `httpx.HTTPStatusError` с детальным логированием
+
+#### 3. Обновлена база данных
+
+**Изменения в БД:**
+- `LLM_BASE_URL` установлен в `https://generativelanguage.googleapis.com/v1beta/openai/`
+- `LLM_MODEL` установлен в `gemini-1.5-flash`
+
+#### 4. Обновлена документация
+
+**Файл:** `/job-autopilot/TELEGRAM_SETUP_INSTRUCTIONS.md`
+
+**Добавлено:**
+- Раздел "LLM Configuration for Google AI Studio (Gemini)"
+- Таблица совместимости провайдеров
+- Инструкция по получению API ключа
+- Troubleshooting guide
+
+### Совместимость
+
+Система теперь поддерживает:
+
+| Провайдер | Base URL | Модели | Статус |
+|-----------|----------|--------|--------|
+| Google AI Studio | `https://generativelanguage.googleapis.com/v1beta/openai/` | gemini-1.5-flash, gemini-1.5-pro | ✅ Работает |
+| OpenAI | `https://api.openai.com/v1` | gpt-4o, gpt-4-turbo, gpt-3.5-turbo | ✅ Работает |
+| OpenRouter | `https://openrouter.ai/api/v1` | Любые модели через OpenRouter | ✅ Работает |
+| Custom | Любой совместимый URL | Любые OpenAI-compatible модели | ✅ Работает |
+
+### Тестирование
+
+Проверка конфигурации:
+
+```bash
+cd /workspace/job-autopilot
+python3 -c "
+from sqlmodel import Session, create_engine, select
+from app.models import Setting
+
+engine = create_engine('sqlite:///./data/db.sqlite')
+session = Session(engine)
+
+print('=== LLM Settings ===')
+for key in ['LLM_API_KEY', 'LLM_BASE_URL', 'LLM_MODEL']:
+    setting = session.get(Setting, key)
+    if setting:
+        print(f'{key}: {setting.value}')
+"
+```
+
+### Что осталось сделать
+
+1. ⚠️ **TELEGRAM_API_HASH** - пустое значение, требуется заполнить
+2. ⚠️ **TELEGRAM_READER_SESSION** - пустое значение, требуется сгенерировать через `generate_session.py`
+3. ⚠️ **LLM_API_KEY** - установлен тестовый ключ `sk-test`, требуется заменить на реальный API ключ от Google AI Studio
+
+### Следующие шаги
+
+1. Получить API ключ от Google AI Studio: https://aistudio.google.com/app/apikey
+2. Сгенерировать Telegram session string через `python3 generate_session.py`
+3. Заполнить TELEGRAM_API_HASH и TELEGRAM_READER_SESSION в UI
+4. Протестировать fetch вакансий из Telegram каналов

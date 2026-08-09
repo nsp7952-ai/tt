@@ -102,7 +102,7 @@ async def get_settings(session: Session = Depends(get_session)):
     """Get all settings"""
     channels = []
     db_channels = session.query(TelegramChannel).all()
-    channels = [{"id": ch.id, "username_or_id": ch.username_or_id, "name": ch.name or "", "enabled": ch.enabled} for ch in db_channels]
+    channels = [{"id": ch.id, "username_or_id": ch.username_or_id, "name": ch.name or "", "enabled": ch.enabled, "parse_depth_hours": ch.parse_depth_hours or 168, "last_message_id": ch.last_message_id, "last_checked_at": ch.last_checked_at.isoformat() if ch.last_checked_at else None} for ch in db_channels]
     
     # Get actual values for display (masked for secrets)
     llm_api_key_val = get_setting(session, "LLM_API_KEY", "")
@@ -117,8 +117,8 @@ async def get_settings(session: Session = Depends(get_session)):
         # Return masked values for fields that are set, empty string otherwise
         llm_api_key=llm_api_key_val if llm_api_key_val else None,
         llm_api_key_set=llm_api_key_val != "",
-        llm_base_url=get_setting(session, "LLM_BASE_URL", "https://api.openai.com/v1"),
-        llm_model=get_setting(session, "LLM_MODEL", "gpt-4o"),
+        llm_base_url=get_setting(session, "LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta"),
+        llm_model=get_setting(session, "LLM_MODEL", "gemini-1.5-flash"),
         
         telegram_api_id=telegram_api_id_val if telegram_api_id_val else None,
         telegram_api_id_set=telegram_api_id_val != "",
@@ -203,10 +203,10 @@ async def save_settings(data: SettingsRequest, session: Session = Depends(get_se
 
 
 @router.post("/api/channels/add")
-async def add_channel(username_or_id: str, name: Optional[str] = None, session: Session = Depends(get_session)):
+async def add_channel(username_or_id: str, name: Optional[str] = None, parse_depth_hours: int = 168, session: Session = Depends(get_session)):
     """Add a new Telegram channel"""
     try:
-        channel = TelegramChannel(username_or_id=username_or_id, name=name or username_or_id)
+        channel = TelegramChannel(username_or_id=username_or_id, name=name or username_or_id, parse_depth_hours=parse_depth_hours)
         session.add(channel)
         session.commit()
         return {"success": True, "message": "Channel added successfully"}
@@ -238,5 +238,34 @@ async def delete_channel(channel_id: int, session: Session = Depends(get_session
         session.delete(channel)
         session.commit()
         return {"success": True, "message": "Channel deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/channels/{channel_id}/reset-history")
+async def reset_channel_history(channel_id: int, session: Session = Depends(get_session)):
+    """Reset channel history (clear last_message_id) to re-fetch old messages"""
+    try:
+        channel = session.query(TelegramChannel).filter(TelegramChannel.id == channel_id).first()
+        if not channel:
+            raise HTTPException(status_code=404, detail="Channel not found")
+        channel.last_message_id = None
+        channel.last_checked_at = None
+        session.commit()
+        return {"success": True, "message": "Channel history reset successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/channels/{channel_id}/update-parse-depth")
+async def update_channel_parse_depth(channel_id: int, parse_depth_hours: int, session: Session = Depends(get_session)):
+    """Update channel parse depth hours"""
+    try:
+        channel = session.query(TelegramChannel).filter(TelegramChannel.id == channel_id).first()
+        if not channel:
+            raise HTTPException(status_code=404, detail="Channel not found")
+        channel.parse_depth_hours = parse_depth_hours
+        session.commit()
+        return {"success": True, "message": "Parse depth updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

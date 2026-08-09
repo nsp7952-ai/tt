@@ -12,10 +12,12 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./data/db.sqlite"
 
-    # LLM
+    # LLM - Google AI Studio (Gemini)
+    # Base URL: https://generativelanguage.googleapis.com/v1beta/openai/
+    # Model: gemini-1.5-flash
     LLM_API_KEY: Optional[str] = None
-    LLM_BASE_URL: str = "https://api.openai.com/v1"
-    LLM_MODEL: str = "gpt-4o"
+    LLM_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    LLM_MODEL: str = "gemini-1.5-flash"
 
     # Telegram
     TELEGRAM_API_ID: Optional[str] = None

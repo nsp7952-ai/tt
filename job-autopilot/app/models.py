@@ -122,6 +122,7 @@ class TelegramChannel(SQLModel, table=True):
     enabled: bool = True
     last_message_id: Optional[int] = None
     last_checked_at: Optional[datetime] = None
+    parse_depth_hours: Optional[int] = Field(default=168, description="How many hours back to parse (default 168 = 1 week)")
 
 
 class TelegramAccount(SQLModel, table=True):

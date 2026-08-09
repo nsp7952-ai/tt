@@ -31,7 +31,7 @@ class LLMService:
     
     def is_configured(self) -> bool:
         """Проверить, настроен ли LLM."""
-        return bool(self.api_key)
+        return bool(self.api_key and self.base_url)
     
     async def _make_request(
         self,
@@ -40,34 +40,77 @@ class LLMService:
     ) -> Optional[Dict[str, Any]]:
         """Выполнить запрос к LLM API."""
         if not self.is_configured():
-            logger.warning("LLM not configured (API key missing)")
+            logger.warning("LLM not configured (API key or base URL missing)")
             return None
         
+        # Check if using Google AI Studio (Gemini)
+        is_gemini = "generativelanguage.googleapis.com" in self.base_url
+        
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
         
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": self.temperature,
-            "max_tokens": self.max_tokens
-        }
-        
-        if response_format == "json":
-            payload["response_format"] = {"type": "json_object"}
+        if is_gemini:
+            # Gemini API format - API key as query parameter
+            payload = {
+                "contents": [{
+                    "parts": [{
+                        "text": f"{messages[0]['content']}\n\n{messages[1]['content']}"
+                    }]
+                }],
+                "generationConfig": {
+                    "temperature": self.temperature,
+                    "maxOutputTokens": self.max_tokens
+                }
+            }
+            
+            if response_format == "json":
+                payload["generationConfig"]["responseMimeType"] = "application/json"
+            
+            # Gemini endpoint includes model in the path, API key as query param
+            url = f"{self.base_url}/models/{self.model}:generateContent?key={self.api_key}"
+        else:
+            # OpenAI-compatible format - API key in Authorization header
+            headers["Authorization"] = f"Bearer {self.api_key}"
+            
+            payload = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": self.temperature,
+                "max_tokens": self.max_tokens
+            }
+            
+            if response_format == "json":
+                payload["response_format"] = {"type": "json_object"}
+            
+            url = f"{self.base_url}/chat/completions"
         
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
-                    f"{self.base_url}/chat/completions",
+                    url,
                     headers=headers,
                     json=payload
                 )
                 response.raise_for_status()
                 data = response.json()
+                
+                # Parse Gemini response format
+                if is_gemini:
+                    if "candidates" in data and len(data["candidates"]) > 0:
+                        content = data["candidates"][0]["content"]["parts"][0]["text"]
+                        # Wrap in OpenAI-like structure for compatibility
+                        return {
+                            "choices": [{
+                                "message": {"content": content}
+                            }]
+                        }
+                    return None
+                
                 return data
+        except httpx.HTTPStatusError as e:
+            logger.error(f"LLM API HTTP error: {e.response.status_code} - {e.response.text}")
+            return None
         except Exception as e:
             logger.error(f"LLM API error: {e}")
             return None
@@ -286,15 +329,23 @@ Return strict JSON only:
   "is_vacancy": true/false,
   "title": "string or null",
   "company": "string or null",
-  "grade": "junior|middle|senior|unknown",
+  "grade": "junior|middle|senior|lead|unknown",
   "remote": true/false,
   "stack": [],
-  "contact_tg": "string or null",
-  "contact_email": "string or null",
-  "apply_url": "string or null",
+  "description": "string - full vacancy description text from the post",
+  "contact_tg": "string or null - Telegram username/handle (e.g. @username or just username)",
+  "contact_email": "string or null - email address",
+  "apply_url": "string or null - application URL, but NOT hh.ru links (exclude any hh.ru URLs)",
   "salary_text": "string or null",
   "reasons": []
-}"""
+}
+
+Important rules:
+- Extract the full description text from the post
+- For contacts: extract Telegram handles (starting with @ or just usernames), email addresses
+- For apply_url: extract any application links EXCEPT hh.ru links (hh.ru vacancies are processed by a separate agent)
+- If multiple contacts exist, pick the most relevant one for each type
+- Mark is_vacancy=false if this is not a job posting"""
         
         user_prompt = f"""Telegram post:
 {post_text}
