@@ -6,7 +6,7 @@ from app.services.filter_service import FilterService
 from loguru import logger
 import uuid
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 
 class TelegramChannelsSource:
@@ -105,7 +105,7 @@ class TelegramChannelsSource:
                     
                     # Вычисляем дату cutoff на основе parse_depth_hours
                     parse_depth_hours = channel.parse_depth_hours or 168  # default 1 week
-                    cutoff_date = datetime.utcnow() - timedelta(hours=parse_depth_hours)
+                    cutoff_date = datetime.now(timezone.utc) - timedelta(hours=parse_depth_hours)
                     logger.info(f"Using parse depth: {parse_depth_hours} hours, cutoff date: {cutoff_date}")
                     
                     # Получаем новые сообщения (последние 100, но с ограничением по дате)
@@ -116,7 +116,13 @@ class TelegramChannelsSource:
                             break
                         
                         # Останавливаемся если сообщение старше cutoff даты
-                        if message.date and message.date < cutoff_date:
+                        # Убеждаемся что сравниваем timezone-aware datetime
+                        msg_date = message.date
+                        if msg_date and msg_date.tzinfo is None:
+                            # Если дата без timezone, считаем что это UTC
+                            msg_date = msg_date.replace(tzinfo=timezone.utc)
+                        
+                        if msg_date and msg_date < cutoff_date:
                             logger.info(f"Message {message.id} is older than cutoff ({cutoff_date}), stopping")
                             break
                         
@@ -147,7 +153,7 @@ class TelegramChannelsSource:
                     # Обновляем канал
                     if last_msg_id > 0:
                         channel.last_message_id = last_msg_id
-                        channel.last_checked_at = datetime.utcnow()
+                        channel.last_checked_at = datetime.now(timezone.utc)
                         self.session.add(channel)
                         self.session.commit()
                         logger.info(f"Updated channel {channel.username_or_id} last_message_id to {last_msg_id}")

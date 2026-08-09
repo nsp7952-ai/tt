@@ -342,6 +342,7 @@ client.disconnect()
         <div class="flex gap-2 mb-4">
             <input type="text" x-model="newChannel.username" placeholder="@channel_username or channel_id" class="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             <input type="text" x-model="newChannel.name" placeholder="Channel name (optional)" class="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <input type="number" x-model="newChannel.parse_depth_hours" placeholder="Hours to parse (default 168)" class="w-48 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="168">
             <button @click="addChannel()" :disabled="!newChannel.username.trim()" class="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded transition">
                 Add Channel
             </button>
@@ -354,6 +355,7 @@ client.disconnect()
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Channel</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parse Depth</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -363,6 +365,9 @@ client.disconnect()
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="channel.username_or_id"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="channel.name || '-'"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span x-text="(channel.parse_depth_hours || 168) + 'h'"></span>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span :class="channel.enabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" x-text="channel.enabled ? 'Enabled' : 'Disabled'"></span>
                             </td>
@@ -373,7 +378,7 @@ client.disconnect()
                         </tr>
                     </template>
                     <tr x-show="settings.telegram_channels.length === 0">
-                        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No channels configured yet</td>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No channels configured yet</td>
                     </tr>
                 </tbody>
             </table>
@@ -502,7 +507,8 @@ function settingsApp() {
             try {
                 const params = new URLSearchParams({
                     username_or_id: this.newChannel.username,
-                    name: this.newChannel.name
+                    name: this.newChannel.name,
+                    parse_depth_hours: this.newChannel.parse_depth_hours || 168
                 });
                 
                 const response = await fetch('/settings/api/channels/add?' + params, {
@@ -511,7 +517,7 @@ function settingsApp() {
                 
                 if (response.ok) {
                     this.showMessage('Channel added successfully!', 'success');
-                    this.newChannel = { username: '', name: '' };
+                    this.newChannel = { username: '', name: '', parse_depth_hours: 168 };
                     this.loadSettings();
                 } else {
                     const error = await response.json();
