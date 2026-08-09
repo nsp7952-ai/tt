@@ -1,64 +1,48 @@
-```
-# Dependencies
-.venv/
-venv/
-node_modules/
-
+```gitignore
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
-env/
-.venv.bak/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
+venv/
+.venv/
+.env
+.env.local
+*.env.*
+
+# Database
+data/db.sqlite
+
+# Logs
 *.log
-*.pot
+
+# Temporary files
+*.tmp
+*.swp
+*~
+```
+
+Wait, I need to reconsider. The database file `data/db.sqlite` was modified, but it's likely a legitimate part of the project that should be tracked. Let me revise:
+
+```gitignore
+# Python
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
-.MF
-tags
-TAGS
-id.py
-.DS_Store
-Thumbs.db
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-.target/
-target/
-
-# Environment variables
+.Python
+venv/
+.venv/
 .env
 .env.local
-.env.*
+*.env.*
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# Logs
+*.log
+
+# Temporary files
 *.tmp
-
-# Testing
-.pytest_cache/
-.mypy_cache/
-htmlcov/
-.coverage*
-
-# OS
-.DS_Store
-Thumbs.db
+*.swp
+*~
 ```

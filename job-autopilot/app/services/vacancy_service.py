@@ -54,7 +54,7 @@ class VacancyService:
                     continue
 
                 # Создаем URL (для Telegram используем ссылку на сообщение)
-                url = f"https://t.me/{msg['channel']}/{msg['message_id']}"
+                url = f"https://t.me/{msg['channel_id'].lstrip('@')}/{msg['message_id']}"
 
                 # Создаем или обновляем вакансию
                 vacancy = self.create_or_update(
