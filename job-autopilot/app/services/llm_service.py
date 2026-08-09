@@ -31,7 +31,7 @@ class LLMService:
     
     def is_configured(self) -> bool:
         """Проверить, настроен ли LLM."""
-        return bool(self.api_key)
+        return bool(self.api_key and self.base_url)
     
     async def _make_request(
         self,
@@ -40,7 +40,7 @@ class LLMService:
     ) -> Optional[Dict[str, Any]]:
         """Выполнить запрос к LLM API."""
         if not self.is_configured():
-            logger.warning("LLM not configured (API key missing)")
+            logger.warning("LLM not configured (API key or base URL missing)")
             return None
         
         headers = {
@@ -55,8 +55,15 @@ class LLMService:
             "max_tokens": self.max_tokens
         }
         
+        # Google AI Studio (Gemini) uses different parameter for JSON response
         if response_format == "json":
-            payload["response_format"] = {"type": "json_object"}
+            # Check if using Google AI Studio
+            if "generativelanguage.googleapis.com" in self.base_url:
+                # Gemini uses response_mime_type for JSON
+                payload["response_mime_type"] = "application/json"
+            else:
+                # OpenAI uses response_format
+                payload["response_format"] = {"type": "json_object"}
         
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
@@ -68,6 +75,9 @@ class LLMService:
                 response.raise_for_status()
                 data = response.json()
                 return data
+        except httpx.HTTPStatusError as e:
+            logger.error(f"LLM API HTTP error: {e.response.status_code} - {e.response.text}")
+            return None
         except Exception as e:
             logger.error(f"LLM API error: {e}")
             return None

@@ -4,36 +4,36 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
-env/
-venv/
-.venv/
-.ENV
-.venv.bak/
-pip-log.txt
-pip-selfcheck.json
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
+*.py~
+
+# Database
+data/db.sqlite
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Logs
 *.log
-*.pot
-*.pyc
-*.pyo
-*.pyd
-.MF
-tags
-TAGS
-.IDEAssistant/
+
+# Temporary files
+*.tmp
 *.swp
-*~
-.project
-.pydevproject
-.vscode/
-.idea/
+*.swo
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Dependencies
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
 ```
