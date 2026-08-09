@@ -108,6 +108,11 @@ class TelegramChannelsSource:
                     cutoff_date = datetime.now(timezone.utc) - timedelta(hours=parse_depth_hours)
                     logger.info(f"Using parse depth: {parse_depth_hours} hours, cutoff date: {cutoff_date}")
                     
+                    # Soft mode - игнорируем cutoff дату для первых 50 сообщений при начальном парсинге
+                    soft_mode = (last_msg_id == 0)
+                    soft_mode_counter = 50 if soft_mode else 0
+                    logger.info(f"Soft mode: {soft_mode}, counter: {soft_mode_counter}")
+                    
                     # Получаем новые сообщения (последние 500, но с ограничением по дате)
                     # Итерируемся пока не достигнем last_msg_id или cutoff_date
                     new_messages_count = 0
@@ -117,16 +122,21 @@ class TelegramChannelsSource:
                             logger.debug(f"Stopping at message {message.id} <= last_msg_id {last_msg_id}")
                             break
                         
-                        # Останавливаемся если сообщение старше cutoff даты
-                        # Убеждаемся что сравниваем timezone-aware datetime
-                        msg_date = message.date
-                        if msg_date and msg_date.tzinfo is None:
-                            # Если дата без timezone, считаем что это UTC
-                            msg_date = msg_date.replace(tzinfo=timezone.utc)
-                        
-                        if msg_date and msg_date < cutoff_date:
-                            logger.info(f"Message {message.id} dated {msg_date} is older than cutoff ({cutoff_date}), stopping")
-                            break
+                        # В soft mode игнорируем cutoff дату для первых 50 сообщений
+                        if soft_mode and soft_mode_counter > 0:
+                            soft_mode_counter -= 1
+                            logger.debug(f"Soft mode: skipping date check, counter={soft_mode_counter}")
+                        else:
+                            # Останавливаемся если сообщение старше cutoff даты
+                            # Убеждаемся что сравниваем timezone-aware datetime
+                            msg_date = message.date
+                            if msg_date and msg_date.tzinfo is None:
+                                # Если дата без timezone, считаем что это UTC
+                                msg_date = msg_date.replace(tzinfo=timezone.utc)
+                            
+                            if msg_date and msg_date < cutoff_date:
+                                logger.info(f"Message {message.id} dated {msg_date} is older than cutoff ({cutoff_date}), stopping")
+                                break
                         
                         if not message.text:
                             continue
